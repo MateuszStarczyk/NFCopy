@@ -3,4 +3,6 @@
     <string name="app_name">NFCopy</string>
     <string name="action_settings">Ustawienia</string>
     <string name="menu_gallery">Galeria</string>
+    <string name="menu_home">Strona główna</string>
+    <string name="nav_header_description">Kopiuj swoje karty NFC</string>
 </resources>
