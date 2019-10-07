@@ -1,4 +1,4 @@
-package com.mateuszstarczyk.nfcopy.ui.gallery;
+package com.mateuszstarczyk.nfcopy.ui.new_card;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -14,17 +14,17 @@ import androidx.lifecycle.ViewModelProviders;
 
 import com.mateuszstarczyk.nfcopy.R;
 
-public class GalleryFragment extends Fragment {
+public class NewCardFragment extends Fragment {
 
-    private GalleryViewModel galleryViewModel;
+    private NewCardViewModel newCardViewModel;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        galleryViewModel =
-                ViewModelProviders.of(this).get(GalleryViewModel.class);
-        View root = inflater.inflate(R.layout.fragment_gallery, container, false);
+        newCardViewModel =
+                ViewModelProviders.of(this).get(NewCardViewModel.class);
+        View root = inflater.inflate(R.layout.fragment_new_card, container, false);
         final TextView textView = root.findViewById(R.id.text_gallery);
-        galleryViewModel.getText().observe(this, new Observer<String>() {
+        newCardViewModel.getText().observe(this, new Observer<String>() {
             @Override
             public void onChanged(@Nullable String s) {
                 textView.setText(s);

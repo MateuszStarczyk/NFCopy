@@ -1,14 +1,14 @@
-package com.mateuszstarczyk.nfcopy.ui.home;
+package com.mateuszstarczyk.nfcopy.ui.cards;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-public class HomeViewModel extends ViewModel {
+public class CardsViewModel extends ViewModel {
 
     private MutableLiveData<String> mText;
 
-    public HomeViewModel() {
+    public CardsViewModel() {
         mText = new MutableLiveData<>();
         mText.setValue("This is home fragment");
     }

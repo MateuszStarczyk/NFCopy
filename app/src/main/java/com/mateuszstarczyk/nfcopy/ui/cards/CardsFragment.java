@@ -1,4 +1,4 @@
-package com.mateuszstarczyk.nfcopy.ui.home;
+package com.mateuszstarczyk.nfcopy.ui.cards;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -14,17 +14,17 @@ import androidx.lifecycle.ViewModelProviders;
 
 import com.mateuszstarczyk.nfcopy.R;
 
-public class HomeFragment extends Fragment {
+public class CardsFragment extends Fragment {
 
-    private HomeViewModel homeViewModel;
+    private CardsViewModel cardsViewModel;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        homeViewModel =
-                ViewModelProviders.of(this).get(HomeViewModel.class);
-        View root = inflater.inflate(R.layout.fragment_home, container, false);
-        final TextView textView = root.findViewById(R.id.text_home);
-        homeViewModel.getText().observe(this, new Observer<String>() {
+        cardsViewModel =
+                ViewModelProviders.of(this).get(CardsViewModel.class);
+        View root = inflater.inflate(R.layout.fragment_cards, container, false);
+        final TextView textView = root.findViewById(R.id.text_settings);
+        cardsViewModel.getText().observe(this, new Observer<String>() {
             @Override
             public void onChanged(@Nullable String s) {
                 textView.setText(s);

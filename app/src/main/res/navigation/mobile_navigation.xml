@@ -3,31 +3,25 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mobile_navigation"
-    app:startDestination="@+id/nav_home">
+    app:startDestination="@+id/nav_cards">
 
     <fragment
-        android:id="@+id/nav_home"
-        android:name="com.mateuszstarczyk.nfcopy.ui.home.HomeFragment"
-        android:label="@string/menu_home"
-        tools:layout="@layout/fragment_home" />
+        android:id="@+id/nav_cards"
+        android:name="com.mateuszstarczyk.nfcopy.ui.cards.CardsFragment"
+        android:label="@string/menu_cards"
+        tools:layout="@layout/fragment_cards" />
 
     <fragment
-        android:id="@+id/nav_gallery"
-        android:name="com.mateuszstarczyk.nfcopy.ui.gallery.GalleryFragment"
-        android:label="@string/menu_gallery"
-        tools:layout="@layout/fragment_gallery" />
+        android:id="@+id/nav_new_card"
+        android:name="com.mateuszstarczyk.nfcopy.ui.new_card.NewCardFragment"
+        android:label="@string/menu_new_card"
+        tools:layout="@layout/fragment_new_card" />
 
     <fragment
-        android:id="@+id/nav_slideshow"
-        android:name="com.mateuszstarczyk.nfcopy.ui.slideshow.SlideshowFragment"
-        android:label="@string/menu_slideshow"
-        tools:layout="@layout/fragment_slideshow" />
-
-    <fragment
-        android:id="@+id/nav_tools"
-        android:name="com.mateuszstarczyk.nfcopy.ui.tools.ToolsFragment"
-        android:label="@string/menu_tools"
-        tools:layout="@layout/fragment_tools" />
+        android:id="@+id/nav_settings"
+        android:name="com.mateuszstarczyk.nfcopy.ui.settings.SettingsFragment"
+        android:label="@string/menu_settings"
+        tools:layout="@layout/fragment_settings" />
 
     <fragment
         android:id="@+id/nav_share"
