@@ -1,5 +1,7 @@
 package com.mateuszstarczyk.nfcopy.ui.new_card;
 
+import android.nfc.Tag;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
