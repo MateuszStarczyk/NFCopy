@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">NFCopy</string>
-    <string name="action_settings">Ustawienia</string>
+    <string name="action_delete_all">Usuń wszystkie</string>
     <string name="menu_new_card">Nowa karta</string>
     <string name="menu_cards">Karty</string>
     <string name="nav_header_description">Kopiuj swoje karty NFC</string>
@@ -9,4 +9,6 @@
     <string name="menu_send">Wyślij</string>
     <string name="menu_share">Udostępnij</string>
     <string name="ic_wifi_description">Sygnał NFC</string>
+    <string name="action_card_added">Dodano nową kartę</string>
+    <string name="iv_photo">photo</string>
 </resources>
