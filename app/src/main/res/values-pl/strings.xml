@@ -10,5 +10,7 @@
     <string name="menu_share">Udostępnij</string>
     <string name="ic_wifi_description">Sygnał NFC</string>
     <string name="action_card_added">Dodano nową kartę</string>
-    <string name="iv_photo">photo</string>
+    <string name="iv_photo">Zdjęcie</string>
+    <string name="uuid">UUID</string>
+    <string name="card_name">Nazwa</string>
 </resources>
