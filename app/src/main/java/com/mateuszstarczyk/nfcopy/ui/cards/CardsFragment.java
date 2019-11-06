@@ -1,5 +1,6 @@
 package com.mateuszstarczyk.nfcopy.ui.cards;
 
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -136,7 +137,11 @@ public class CardsFragment extends Fragment {
         public void onBindViewHolder(@NonNull CardsViewHolder holder, int position) {
             holder.cardName.setText(cards.get(position).getName());
             holder.cardUID.setText(cards.get(position).getUID());
-            holder.cardPhoto = cards.get(position).getImage();
+            Bitmap bitmap = cards.get(position).getBitmap();
+            if (bitmap != null)
+                holder.cardPhoto.setImageBitmap(bitmap);
+            else
+                holder.cardPhoto.setImageDrawable(getActivity().getDrawable(R.drawable.ic_menu_card));
         }
 
         @Override

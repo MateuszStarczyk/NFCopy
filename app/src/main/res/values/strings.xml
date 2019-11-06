@@ -11,6 +11,9 @@
     <string name="ic_wifi_description">Nfc signal</string>
     <string name="action_card_added">New card added</string>
     <string name="iv_photo">Photo</string>
-    <string name="uuid">UUID</string>
+    <string name="card_uuid">UUID</string>
     <string name="card_name">Name</string>
+    <string name="add">Add</string>
+    <string name="action_select_picture">Select Picture</string>
+    <string name="card_class">Class</string>
 </resources>
