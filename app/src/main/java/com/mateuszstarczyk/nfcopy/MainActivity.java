@@ -11,6 +11,7 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.navigation.NavigationView;
+import com.mateuszstarczyk.nfcopy.service.nfc.db.TinyDB;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -31,18 +32,21 @@ public class MainActivity extends AppCompatActivity {
                 R.id.nav_settings, R.id.nav_share, R.id.nav_send)
                 .setDrawerLayout(drawer)
                 .build();
+        TinyDB tinydb = new TinyDB(this);
+        tinydb.remove("last_deleted");
+        tinydb.remove("last_deleted_index");
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
     }
 
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        // Inflate the menu; this adds items to the action bar if it is present.
-//        getMenuInflater().inflate(R.menu.main, menu);
-//        menu.setGroupVisible(R.id.group_cards, false);
-//        return true;
-//    }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        TinyDB tinydb = new TinyDB(this);
+        tinydb.remove("last_deleted");
+        tinydb.remove("last_deleted_index");
+    }
 
     @Override
     public boolean onSupportNavigateUp() {

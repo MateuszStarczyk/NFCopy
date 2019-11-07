@@ -1,10 +1,11 @@
 package com.mateuszstarczyk.nfcopy.ui.new_card;
 
+import android.accessibilityservice.AccessibilityService;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.net.Uri;
+import android.inputmethodservice.Keyboard;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.os.Bundle;
@@ -13,11 +14,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -25,12 +25,13 @@ import androidx.lifecycle.ViewModelProviders;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.textfield.TextInputEditText;
 import com.mateuszstarczyk.nfcopy.R;
 import com.mateuszstarczyk.nfcopy.service.nfc.NfcCard;
 import com.mateuszstarczyk.nfcopy.service.nfc.NfcReader;
 import com.mateuszstarczyk.nfcopy.service.nfc.db.TinyDB;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -52,9 +53,10 @@ public class NewCardFragment extends Fragment {
     private NavController navController;
     private View root;
     private PulsatorLayout pulsator;
-    private EditText etCardId;
-    private EditText etCardName;
-    private TextView tvCardClass;
+    private View newCardView;
+    private TextInputEditText tilCardId;
+    private TextInputEditText tilCardName;
+    private TextInputEditText tilCardClass;
     private ImageView ivPreview;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -75,27 +77,23 @@ public class NewCardFragment extends Fragment {
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        etCardId.setText(byteToString(tag.getId()));
-                        tvCardClass.setText(Arrays.toString(tag.getTechList()));
+                        tilCardId.setText(byteToString(tag.getId()));
+                        tilCardClass.setText(Arrays.toString(tag.getTechList()));
                     }
                 });
             }
         });
-        if (newCardViewModel.isEditMode()) {
-            setEditMode();
-        } else {
-            pulsator.start();
-            setScanMode();
-        }
-        etCardId = root.findViewById(R.id.et_card_id);
-        etCardName = root.findViewById(R.id.et_card_name);
-        tvCardClass = root.findViewById(R.id.tv_card_class);
+
+        newCardView = root.findViewById(R.id.cl_new_card);
+        tilCardId = root.findViewById(R.id.et_card_id);
+        tilCardName = root.findViewById(R.id.et_card_name);
+        tilCardClass = root.findViewById(R.id.tv_card_class);
         ivPreview = root.findViewById(R.id.iv_preview);
 
-        Button btnAdd = root.findViewById(R.id.btnAdd);
-        Button btnCancel = root.findViewById(R.id.btnCancel);
-        ImageButton btnGallery = root.findViewById(R.id.btn_gallery);
-        ImageButton btnCamera = root.findViewById(R.id.btn_camera);
+        MaterialButton btnAdd = root.findViewById(R.id.btnAdd);
+        MaterialButton btnCancel = root.findViewById(R.id.btnCancel);
+        MaterialButton btnGallery = root.findViewById(R.id.btn_gallery);
+        MaterialButton btnCamera = root.findViewById(R.id.btn_camera);
 
         btnAdd.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -124,6 +122,13 @@ public class NewCardFragment extends Fragment {
 
         navController = Navigation.findNavController(Objects.requireNonNull(getActivity()), R.id.nav_host_fragment);
 
+        if (newCardViewModel.isEditMode()) {
+            setEditMode();
+        } else {
+            pulsator.start();
+            setScanMode();
+        }
+
         return root;
     }
 
@@ -151,14 +156,14 @@ public class NewCardFragment extends Fragment {
                     InputStream inputStream = Objects.requireNonNull(getContext())
                             .getContentResolver()
                             .openInputStream(Objects.requireNonNull(data.getData()));
-                    newCardViewModel.setNfcCard(new NfcCard(etCardId.getText().toString(), etCardName.getText().toString(), tvCardClass.getText().toString(), BitmapFactory.decodeStream(inputStream)));
+                    newCardViewModel.setNfcCard(new NfcCard(tilCardId.getText().toString(), tilCardName.getText().toString(), tilCardClass.getText().toString(), BitmapFactory.decodeStream(inputStream)));
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 }
             }
         } else if (requestCode == PICK_CAMERA_PHOTO && resultCode == RESULT_OK) {
             Bundle extras = data.getExtras();
-            newCardViewModel.setNfcCard(new NfcCard(etCardId.getText().toString(), etCardName.getText().toString(), tvCardClass.getText().toString(), (Bitmap)extras.get("data")));
+            newCardViewModel.setNfcCard(new NfcCard(tilCardId.getText().toString(), tilCardName.getText().toString(), tilCardClass.getText().toString(), (Bitmap)extras.get("data")));
         }
     }
 
@@ -169,7 +174,7 @@ public class NewCardFragment extends Fragment {
             public void run() {
                 pulsator.setVisibility(View.GONE);
                 root.findViewById(R.id.iv_scan).setVisibility(View.GONE);
-                root.findViewById(R.id.cl_new_card).setVisibility(View.VISIBLE);
+                newCardView.setVisibility(View.VISIBLE);
             }
         });
     }
@@ -179,7 +184,7 @@ public class NewCardFragment extends Fragment {
         nfcReader.enableReaderMode();
         getActivity().runOnUiThread(new Runnable() {
             public void run() {
-                root.findViewById(R.id.cl_new_card).setVisibility(View.GONE);
+                newCardView.setVisibility(View.GONE);
                 pulsator.setVisibility(View.VISIBLE);
                 root.findViewById(R.id.iv_scan). setVisibility(View.VISIBLE);
             }
@@ -191,14 +196,13 @@ public class NewCardFragment extends Fragment {
     }
 
     private void onClickAdd() {
-        setScanMode();
-        goToCardsView();
-        TinyDB tinydb = new TinyDB(getContext());
+        TinyDB tinydb = new TinyDB(getActivity());
         ArrayList<NfcCard> tagsUIDs = tinydb.getListObject("nfc_cards", NfcCard.class);
 
-        tagsUIDs.add(new NfcCard(etCardId.getText().toString(), etCardName.getText().toString(), tvCardClass.getText().toString(), ivPreview));
+        tagsUIDs.add(new NfcCard(tilCardId.getText().toString(), tilCardName.getText().toString(), tilCardClass.getText().toString(), ivPreview));
         tinydb.putListObject("nfc_cards", tagsUIDs);
-
+        newCardViewModel.setEditMode(false);
+        goToCardsView();
     }
 
     public void readTag(Tag tag){
@@ -206,6 +210,7 @@ public class NewCardFragment extends Fragment {
     }
 
     private void goToCardsView() {
+        hideKeyboard();
         Objects.requireNonNull(getActivity()).runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -214,7 +219,16 @@ public class NewCardFragment extends Fragment {
         });
     }
 
-
+    private void hideKeyboard() {
+        InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Activity.INPUT_METHOD_SERVICE);
+        //Find the currently focused view, so we can grab the correct window token from it.
+        View view = getActivity().getCurrentFocus();
+        //If no view currently has focus, create a new one, just so we can grab a window token from it
+        if (view == null) {
+            view = new View(getActivity());
+        }
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+    }
 
     @Override
     public void onResume() {
@@ -224,10 +238,15 @@ public class NewCardFragment extends Fragment {
             getActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    etCardId.setText(newCardViewModel.getNfcCard().getUID());
-                    etCardName.setText(newCardViewModel.getNfcCard().getName());
-                    tvCardClass.setText(newCardViewModel.getNfcCard().getClassName());
-                    ivPreview.setImageBitmap(newCardViewModel.getNfcCard().getBitmap());
+                    tilCardId.setText(newCardViewModel.getNfcCard().getUID());
+                    tilCardName.setText(newCardViewModel.getNfcCard().getName());
+                    tilCardClass.setText(newCardViewModel.getNfcCard().getClassName());
+                    if (newCardViewModel.getNfcCard().getBitmap() == null) {
+                        ivPreview.setVisibility(View.GONE);
+                    } else {
+                        ivPreview.setVisibility(View.VISIBLE);
+                        ivPreview.setImageBitmap(newCardViewModel.getNfcCard().getBitmap());
+                    }
                 }
             });
         } else
@@ -238,7 +257,7 @@ public class NewCardFragment extends Fragment {
     public void onStop() {
         super.onStop();
         if (newCardViewModel.isEditMode()) {
-            newCardViewModel.setNfcCard(new NfcCard(etCardId.getText().toString(), etCardName.getText().toString(), tvCardClass.getText().toString(), ivToBitmap(ivPreview)));
+            newCardViewModel.setNfcCard(new NfcCard(tilCardId.getText().toString(), tilCardName.getText().toString(), tilCardClass.getText().toString(), ivToBitmap(ivPreview)));
         }
         nfcReader.disableReaderMode();
     }

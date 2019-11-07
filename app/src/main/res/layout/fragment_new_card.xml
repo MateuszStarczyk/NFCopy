@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -31,93 +32,60 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <TextView
-                android:id="@+id/tv_lbl_id"
-                android:layout_width="wrap_content"
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_uuid"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="24dp"
-                android:labelFor="@id/et_card_id"
-                android:text="@string/card_uuid"
-                android:textAlignment="center"
-                app:layout_constraintBottom_toBottomOf="@+id/et_card_id"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/et_card_id" />
-
-            <EditText
-                android:id="@+id/et_card_id"
-                android:layout_width="0dp"
-                android:layout_height="50dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginEnd="24dp"
-                android:importantForAutofill="no"
-                android:inputType=""
+                android:hint="@string/card_uuid"
+                app:layout_constraintTop_toBottomOf="@id/textView2"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="@+id/et_card_name"
-                app:layout_constraintTop_toBottomOf="@+id/textView2" />
+                app:layout_constraintStart_toStartOf="parent">
 
-            <TextView
-                android:id="@+id/tv_lbl_class"
-                android:layout_width="wrap_content"
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_card_id"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginHorizontal="24dp"
+                    android:importantForAutofill="no"
+                    android:inputType=""/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_class"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="7dp"
-                android:layout_marginEnd="3dp"
-                android:text="@string/card_class"
-                android:textAlignment="center"
-                app:layout_constraintBottom_toBottomOf="@+id/tv_card_class"
-                app:layout_constraintEnd_toStartOf="@+id/tv_card_class"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/tv_card_class" />
-
-            <TextView
-                android:id="@+id/tv_card_class"
-                android:layout_width="0dp"
-                android:layout_height="50dp"
-                android:layout_marginEnd="24dp"
-                android:autofillHints="@string/card_name"
-                android:textSize="18sp"
+                android:hint="@string/card_class"
+                app:layout_constraintTop_toBottomOf="@id/til_uuid"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="@+id/et_card_id"
-                app:layout_constraintTop_toBottomOf="@+id/et_card_id" />
+                app:layout_constraintStart_toStartOf="parent">
 
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/tv_card_class"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="24dp"
+                    android:autofillHints="@string/card_name"
+                    android:enabled="false"/>
 
-            <TextView
-                android:id="@+id/tv_lbl_name"
-                android:layout_width="wrap_content"
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_name"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="24dp"
-                android:layout_marginTop="3dp"
-                android:labelFor="@id/et_card_name"
-                android:text="@string/card_name"
-                android:textAlignment="center"
-                app:layout_constraintBottom_toBottomOf="@+id/et_card_name"
-                app:layout_constraintEnd_toStartOf="@+id/et_card_name"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/et_card_name" />
-
-            <EditText
+                android:hint="@string/card_name"
+                app:layout_constraintTop_toBottomOf="@id/til_class"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent">
+            <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_card_name"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="50dp"
-                android:layout_marginStart="24dp"
-                android:layout_marginEnd="24dp"
-                android:autofillHints="@string/card_name"
-                android:inputType="textShortMessage"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/tv_lbl_name"
-                app:layout_constraintTop_toBottomOf="@+id/tv_card_class" />
+                android:layout_marginHorizontal="24dp"
+                android:inputType="textShortMessage" />
 
-            <TextView
-                android:id="@+id/tv_lbl_image"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="24dp"
-                android:labelFor="@id/btn_gallery"
-                android:text="@string/iv_photo"
-                android:textAlignment="center"
-                app:layout_constraintBottom_toBottomOf="@+id/linearLayout2"
-                app:layout_constraintEnd_toEndOf="@+id/tv_lbl_name"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/linearLayout2" />
+            </com.google.android.material.textfield.TextInputLayout>
 
             <LinearLayout
                 android:id="@+id/linearLayout2"
@@ -125,33 +93,31 @@
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:orientation="horizontal"
+                app:layout_constraintTop_toBottomOf="@id/til_name"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/et_card_name">
+                app:layout_constraintStart_toStartOf="parent">
 
-                <ImageButton
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_gallery"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:layout_margin="10dp"
-                    android:background="#8F000000"
-                    android:contentDescription="@string/iv_photo"
-                    android:scaleType="centerCrop"
-                    android:scaleX="1"
-                    android:scaleY="1"
-                    app:srcCompat="@android:drawable/ic_menu_gallery" />
+                    android:text="@string/card_gallery"
+                    app:iconGravity="textStart"
+                    android:gravity="center"
+                    app:icon="@android:drawable/ic_menu_gallery" />
 
-                <ImageButton
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_camera"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:layout_margin="10dp"
-                    android:background="#8F000000"
-                    android:contentDescription="@string/iv_photo"
-                    android:scaleType="centerCrop"
-                    android:scaleX="1"
-                    android:scaleY="1"
-                    app:srcCompat="@android:drawable/ic_menu_camera" />
+                    android:text="@string/card_camera"
+                    app:iconGravity="textStart"
+                    android:gravity="center"
+                    app:icon="@android:drawable/ic_menu_camera" />
             </LinearLayout>
 
             <com.mateuszstarczyk.nfcopy.ui.SquareImageView
@@ -162,6 +128,7 @@
                 android:adjustViewBounds="true"
                 android:contentDescription="@string/iv_photo"
                 android:scaleType="centerCrop"
+                android:visibility="gone"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/linearLayout2"
@@ -176,17 +143,17 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/iv_preview">
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnCancel"
-                    style="@style/Widget.AppCompat.Button"
+                    style="@style/Widget.MaterialComponents.Button"
                     android:layout_width="100dp"
                     android:layout_height="wrap_content"
                     android:layout_margin="10dp"
                     android:text="@android:string/cancel" />
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnAdd"
-                    style="@style/Widget.AppCompat.Button"
+                    style="@style/Widget.MaterialComponents.Button"
                     android:layout_width="100dp"
                     android:layout_height="wrap_content"
                     android:layout_margin="10dp"
@@ -194,6 +161,7 @@
             </LinearLayout>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
+
     </ScrollView>
 
     <pl.bclogic.pulsator4droid.library.PulsatorLayout

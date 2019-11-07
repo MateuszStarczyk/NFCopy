@@ -1,6 +1,11 @@
 package com.mateuszstarczyk.nfcopy.ui.cards;
 
+import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -13,29 +18,32 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
 import com.mateuszstarczyk.nfcopy.R;
 import com.mateuszstarczyk.nfcopy.service.nfc.NfcCard;
 import com.mateuszstarczyk.nfcopy.service.nfc.db.TinyDB;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 public class CardsFragment extends Fragment {
 
     private CardsViewModel cardsViewModel;
-    private List<NfcCard> cards;
     private TinyDB tinydb;
     private RecyclerView rv;
     private FloatingActionButton fab;
+    private RVAdapter adapter;
 
 
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -44,22 +52,31 @@ public class CardsFragment extends Fragment {
                 ViewModelProviders.of(this).get(CardsViewModel.class);
         View root = inflater.inflate(R.layout.fragment_cards, container, false);
         setHasOptionsMenu(true);
-        NavController navController = Navigation.findNavController(Objects.requireNonNull(getActivity()), R.id.nav_host_fragment);
+        NavController navController = Navigation.findNavController(
+                Objects.requireNonNull(getActivity()), R.id.nav_host_fragment);
+
         fab = getActivity().findViewById(R.id.fab);
-//        fab.setVisibility(View.VISIBLE);
         fab.setOnClickListener(new FabViewListener(navController));
         fab.show();
-        tinydb = new TinyDB(getContext());
-        cards = tinydb.getListObject("nfc_cards", NfcCard.class);
+
+        tinydb = new TinyDB(getActivity());
+        ArrayList<NfcCard> cards = tinydb.getListObject("nfc_cards", NfcCard.class);
 
         rv = root.findViewById(R.id.rv_cards);
         rv.setHasFixedSize(true);
 
-        LinearLayoutManager llm = new LinearLayoutManager(getContext());
+        LinearLayoutManager llm = new LinearLayoutManager(getActivity());
         rv.setLayoutManager(llm);
 
-        RVAdapter adapter = new RVAdapter(cards);
+        adapter = new RVAdapter(cards);
         rv.setAdapter(adapter);
+
+        ItemTouchHelper.SimpleCallback simpleItemTouchCallback = new SwipeToDeleteSimpleCallback(
+                0, ItemTouchHelper.ANIMATION_TYPE_SWIPE_CANCEL);
+
+
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleItemTouchCallback);
+        itemTouchHelper.attachToRecyclerView(rv);
 
         return root;
     }
@@ -67,9 +84,8 @@ public class CardsFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        cards = tinydb.getListObject("nfc_cards", NfcCard.class);
-        RVAdapter adapter = new RVAdapter(cards);
-        rv.setAdapter(adapter);
+        adapter.cards.clear();
+        adapter.cards = tinydb.getListObject("nfc_cards", NfcCard.class);
         fab.show();
     }
 
@@ -94,6 +110,107 @@ public class CardsFragment extends Fragment {
         return super.onOptionsItemSelected(item);
     }
 
+    private class SwipeToDeleteSimpleCallback extends ItemTouchHelper.SimpleCallback {
+
+        private Drawable icon;
+        private final Drawable background;
+
+        public SwipeToDeleteSimpleCallback(int dragDirs, int swipeDirs) {
+            super(dragDirs, swipeDirs);
+            icon = ContextCompat.getDrawable(getActivity(),
+                    R.drawable.ic_delete_sweep_black_24dp);
+            background = getActivity().getDrawable(R.drawable.layout_corner_radius_background);
+        }
+
+        @Override
+        public void onChildDraw(@NonNull Canvas c, @NonNull RecyclerView recyclerView,
+                                @NonNull RecyclerView.ViewHolder viewHolder, float dX,
+                                float dY, int actionState, boolean isCurrentlyActive) {
+            super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
+            View itemView = viewHolder.itemView;
+            CardView cv = itemView.findViewById(R.id.cv_cards);
+            int backgroundCornerOffset =
+                    ((ViewGroup.MarginLayoutParams)cv
+                            .getLayoutParams()).rightMargin;
+            int cardViewCornerRadius = Math.round(cv.getRadius());
+
+            int iconMargin = (itemView.getHeight() - icon.getIntrinsicHeight()) / 2;
+            int iconTop = itemView.getTop() + (itemView.getHeight() - icon.getIntrinsicHeight()) / 2;
+            int iconBottom = iconTop + icon.getIntrinsicHeight();
+
+            if (dX > 0) { // Swiping to the right
+                int iconLeft = itemView.getLeft() + iconMargin + icon.getIntrinsicWidth();
+                int iconRight = itemView.getLeft() + iconMargin;
+                icon.setBounds(iconLeft, iconTop, iconRight, iconBottom);
+
+                background.setBounds(itemView.getLeft(), itemView.getTop(),
+                        itemView.getLeft() + ((int) dX) + backgroundCornerOffset,
+                        itemView.getBottom());
+            } else if (dX < 0) { // Swiping to the left
+                int iconLeft = itemView.getRight() - iconMargin - icon.getIntrinsicWidth();
+                int iconRight = itemView.getRight() - iconMargin;
+                icon.setBounds(iconLeft, iconTop, iconRight, iconBottom);
+
+                int cardViewWidth = itemView.getRight() - 2 * backgroundCornerOffset;
+                if (dX > - cardViewWidth) {
+                    background.setBounds(itemView.getRight() + ((int) dX)
+                                    - backgroundCornerOffset - 2 * cardViewCornerRadius,
+                            itemView.getTop() + backgroundCornerOffset,
+                            itemView.getRight() - backgroundCornerOffset,
+                            itemView.getBottom() - backgroundCornerOffset);
+                } else {
+                    background.setBounds(itemView.getRight() - cardViewWidth
+                                    - backgroundCornerOffset,
+                            itemView.getTop() + backgroundCornerOffset,
+                            itemView.getRight() - backgroundCornerOffset,
+                            itemView.getBottom() - backgroundCornerOffset);
+                }
+
+            } else { // view is unSwiped
+                background.setBounds(0, 0, 0, 0);
+            }
+
+            background.draw(c);
+            icon.draw(c);
+        }
+
+        @Override
+        public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+            return false;
+        }
+
+        @Override
+        public void onSwiped(RecyclerView.ViewHolder viewHolder, int swipeDir) {
+            tinydb.putInt("last_deleted_index", viewHolder.getAdapterPosition());
+            tinydb.putObject("last_deleted", adapter.cards.get(viewHolder.getAdapterPosition()));
+
+            adapter.cards.remove(viewHolder.getAdapterPosition());
+            tinydb.putListObject("nfc_cards", adapter.cards);
+            adapter.notifyItemRemoved(viewHolder.getAdapterPosition());
+
+            Snackbar mySnackbar = Snackbar.make(viewHolder.itemView,
+                    R.string.action_deleted_card, Snackbar.LENGTH_SHORT);
+            mySnackbar.setAction(R.string.action_undo_deleted, new View.OnClickListener() {
+
+                @Override
+                public void onClick(View v) {
+                    int position = tinydb.getInt("last_deleted_index");
+                    adapter.cards.add(position, tinydb.getObject("last_deleted", NfcCard.class));
+                    tinydb.putListObject("nfc_cards", adapter.cards);
+                    adapter.notifyItemInserted(position);
+                    tinydb.remove("last_deleted");
+                    tinydb.remove("last_deleted_index");
+                }
+            });
+            mySnackbar.show();
+        }
+
+        @Override
+        public void onMoved(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, int fromPos, RecyclerView.ViewHolder target, int toPos, int x, int y) {
+            super.onMoved(recyclerView, viewHolder, fromPos, target, toPos, x, y);
+        }
+    }
+
     private class FabViewListener implements View.OnClickListener {
 
         private final NavController navController;
@@ -115,9 +232,9 @@ public class CardsFragment extends Fragment {
 
     private class RVAdapter extends RecyclerView.Adapter<RVAdapter.CardsViewHolder>{
 
-        List<NfcCard> cards;
+        ArrayList<NfcCard> cards;
 
-        RVAdapter(List<NfcCard> cards){
+        RVAdapter(ArrayList<NfcCard> cards){
             this.cards = cards;
         }
 
@@ -129,8 +246,8 @@ public class CardsFragment extends Fragment {
         @NonNull
         @Override
         public CardsViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.card_view, parent, false);
-            return new CardsViewHolder(v);
+            View cardsView = LayoutInflater.from(parent.getContext()).inflate(R.layout.card_view, parent, false);
+            return new CardsViewHolder(cardsView);
         }
 
         @Override

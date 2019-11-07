@@ -28,13 +28,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
 import android.os.Environment;
-import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -46,8 +46,8 @@ public class TinyDB {
     private String DEFAULT_APP_IMAGEDATA_DIRECTORY;
     private String lastImagePath = "";
 
-    public TinyDB(Context appContext) {
-        preferences = PreferenceManager.getDefaultSharedPreferences(appContext);
+    public TinyDB(Activity activity) {
+        preferences = activity.getPreferences(Context.MODE_PRIVATE);
     }
 
 
