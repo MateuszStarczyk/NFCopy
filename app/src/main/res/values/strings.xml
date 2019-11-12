@@ -9,7 +9,7 @@
     <string name="menu_share">Share</string>
     <string name="menu_send">Send</string>
     <string name="ic_wifi_description">Nfc signal</string>
-    <string name="action_card_added">New card added</string>
+    <string name="action_card_added">Nesystem.loadw card added</string>
     <string name="iv_photo">Photo</string>
     <string name="card_uuid">UUID</string>
     <string name="card_name">Name</string>
@@ -20,4 +20,7 @@
     <string name="action_undo_deleted">Undo</string>
     <string name="card_gallery">Gallery</string>
     <string name="card_camera">Camera</string>
+    <string name="servicedesc">HostApdu</string>
+    <string name="pref_key_workaround_off">pref_workaroundoff</string>
+    <string name="aiddescription">HostApdu Service</string>
 </resources>

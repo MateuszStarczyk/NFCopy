@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/NFCopy.iml" filepath="$PROJECT_DIR$/NFCopy.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/nfcd/nfcd.iml" filepath="$PROJECT_DIR$/nfcd/nfcd.iml" />
     </modules>
   </component>
 </project>

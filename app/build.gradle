@@ -10,12 +10,6 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        ndk {
-            moduleName "nfcgate-native"
-            //cFlags "-std=c++11" //  -fexceptions -marm -g -fPIE
-            ldLibs "log"
-            abiFilters "armeabi-v7a"
-        }
     }
     buildTypes {
         release {
@@ -28,15 +22,11 @@ android {
             minifyEnabled false
         }
     }
-    externalNativeBuild {
-        cmake {
-            path 'CMakeLists.txt'
-        }
-    }
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation project(':nfcd')
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'com.google.android.material:material:1.0.0'
@@ -47,8 +37,6 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-extensions:2.1.0'
     implementation 'pl.bclogic:pulsator4droid:1.0.3'
     implementation 'androidx.appcompat:appcompat:1.1.0'
-    compileOnly 'de.robv.android.xposed:api:82'
-    compileOnly 'de.robv.android.xposed:api:82:sources'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'

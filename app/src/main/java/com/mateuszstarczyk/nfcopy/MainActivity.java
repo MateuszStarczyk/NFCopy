@@ -19,12 +19,15 @@ import androidx.navigation.ui.NavigationUI;
 import com.google.android.material.navigation.NavigationView;
 import com.mateuszstarczyk.nfcopy.nfc.hce.DaemonConfiguration;
 import com.mateuszstarczyk.nfcopy.service.nfc.db.TinyDB;
-import com.mateuszstarczyk.nfcopy.xposed.IPCBroadcastReceiver;
+
+import tud.seemuh.nfcgate.xposed.IPCBroadcastReceiver;
 
 public class MainActivity extends AppCompatActivity {
 
     private AppBarConfiguration mAppBarConfiguration;
     private IntentFilter mIntentFilter = new IntentFilter();
+    private BroadcastReceiver broadcastoastReceiver;
+    private IPCBroadcastReceiver ipcBroadcastReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,15 +52,22 @@ public class MainActivity extends AppCompatActivity {
         NavigationUI.setupWithNavController(navigationView, navController);
 
         DaemonConfiguration.Init(this);
-        registerReceiver(new BroadcastReceiver() {
+
+        broadcastoastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 Toast.makeText(context, intent.getStringExtra("text"), Toast.LENGTH_LONG).show();
             }
-        }, new IntentFilter("com.mateuszstarczyk.nfcopy.toaster"));
-        mIntentFilter.addAction(NfcAdapter.ACTION_ADAPTER_STATE_CHANGED);
+        };
 
-        new IPCBroadcastReceiver(this);
+    }
+
+    @Override
+    protected void onPostResume() {
+        super.onPostResume();
+        registerReceiver(broadcastoastReceiver, new IntentFilter("com.mateuszstarczyk.nfcopy.toaster"));
+        ipcBroadcastReceiver = new IPCBroadcastReceiver(this);
+        mIntentFilter.addAction(NfcAdapter.ACTION_ADAPTER_STATE_CHANGED);
     }
 
     @Override
@@ -66,6 +76,8 @@ public class MainActivity extends AppCompatActivity {
         TinyDB tinydb = new TinyDB(this);
         tinydb.remove("last_deleted");
         tinydb.remove("last_deleted_index");
+        unregisterReceiver(broadcastoastReceiver);
+        unregisterReceiver(ipcBroadcastReceiver);
     }
 
     @Override

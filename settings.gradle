@@ -1,2 +1,2 @@
-include ':app'
+include ':app', ':nfcd'
 rootProject.name='NFCopy'
