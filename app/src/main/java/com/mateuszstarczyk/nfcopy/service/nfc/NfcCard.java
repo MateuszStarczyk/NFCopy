@@ -12,6 +12,10 @@ public class NfcCard {
     private String name;
     private String className;
     private String bitmap;
+    private byte atqa;
+    private byte sak;
+    private byte[] hist;
+    private byte[] uid;
 
     public NfcCard(String UID, String name, String className, ImageView image) {
         this.UID = UID;

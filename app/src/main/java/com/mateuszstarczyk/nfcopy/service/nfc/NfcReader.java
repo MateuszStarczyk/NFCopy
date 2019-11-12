@@ -107,4 +107,8 @@ public class NfcReader {
 
         return sb.toString();
     }
+
+    public static byte[] stringToByte(String s) {
+        return s.getBytes();
+    }
 }

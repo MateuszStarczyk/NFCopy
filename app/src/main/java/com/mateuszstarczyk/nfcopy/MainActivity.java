@@ -1,6 +1,12 @@
 package com.mateuszstarczyk.nfcopy;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.nfc.NfcAdapter;
 import android.os.Bundle;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -11,11 +17,14 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.navigation.NavigationView;
+import com.mateuszstarczyk.nfcopy.nfc.hce.DaemonConfiguration;
 import com.mateuszstarczyk.nfcopy.service.nfc.db.TinyDB;
+import com.mateuszstarczyk.nfcopy.xposed.IPCBroadcastReceiver;
 
 public class MainActivity extends AppCompatActivity {
 
     private AppBarConfiguration mAppBarConfiguration;
+    private IntentFilter mIntentFilter = new IntentFilter();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +47,17 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
+
+        DaemonConfiguration.Init(this);
+        registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Toast.makeText(context, intent.getStringExtra("text"), Toast.LENGTH_LONG).show();
+            }
+        }, new IntentFilter("com.mateuszstarczyk.nfcopy.toaster"));
+        mIntentFilter.addAction(NfcAdapter.ACTION_ADAPTER_STATE_CHANGED);
+
+        new IPCBroadcastReceiver(this);
     }
 
     @Override

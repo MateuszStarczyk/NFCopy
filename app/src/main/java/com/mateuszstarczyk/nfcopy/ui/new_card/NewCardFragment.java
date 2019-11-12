@@ -28,6 +28,8 @@ import androidx.navigation.Navigation;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.mateuszstarczyk.nfcopy.R;
+import com.mateuszstarczyk.nfcopy.nfc.NfcManager;
+import com.mateuszstarczyk.nfcopy.nfc.hce.DaemonConfiguration;
 import com.mateuszstarczyk.nfcopy.service.nfc.NfcCard;
 import com.mateuszstarczyk.nfcopy.service.nfc.NfcReader;
 import com.mateuszstarczyk.nfcopy.service.nfc.db.TinyDB;
@@ -70,9 +72,11 @@ public class NewCardFragment extends Fragment {
         nfcReader = new NfcReader(getActivity(), new NfcAdapter.ReaderCallback() {
             @Override
             public void onTagDiscovered(final Tag tag) {
-                nfcReader.disableReaderMode();
+                NfcManager manager = new NfcManager();
+                manager.setTag(tag);
+                manager.setAnticolData(manager.getAnticolData());
+//                nfcReader.disableReaderMode();
                 Log.i("INFO", tag.toString());
-
                 setEditMode();
                 getActivity().runOnUiThread(new Runnable() {
                     @Override

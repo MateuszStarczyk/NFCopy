@@ -31,10 +31,12 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.mateuszstarczyk.nfcopy.R;
+import com.mateuszstarczyk.nfcopy.nfc.hce.DaemonConfiguration;
 import com.mateuszstarczyk.nfcopy.service.nfc.NfcCard;
 import com.mateuszstarczyk.nfcopy.service.nfc.db.TinyDB;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Objects;
 
 public class CardsFragment extends Fragment {
@@ -278,6 +280,14 @@ public class CardsFragment extends Fragment {
                 cardName = itemView.findViewById(R.id.card_name);
                 cardUID = itemView.findViewById(R.id.card_uid);
                 cardPhoto = itemView.findViewById(R.id.card_photo);
+                cv.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        byte b1 = 0, b2 = 0;
+                        DaemonConfiguration.getInstance().uploadConfiguration(b1, b2, new byte[0], cardUID.getText().toString().getBytes());
+                        DaemonConfiguration.getInstance().enablePolling();
+                    }
+                });
             }
         }
 
