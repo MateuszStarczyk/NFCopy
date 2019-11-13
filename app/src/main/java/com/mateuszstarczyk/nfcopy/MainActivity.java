@@ -20,18 +20,28 @@ import com.google.android.material.navigation.NavigationView;
 import com.mateuszstarczyk.nfcopy.nfc.hce.DaemonConfiguration;
 import com.mateuszstarczyk.nfcopy.service.nfc.db.TinyDB;
 
-import tud.seemuh.nfcgate.xposed.IPCBroadcastReceiver;
+import com.mateuszstarczyk.nfcopy.xposed.IPCBroadcastReceiver;
+
+import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
 
     private AppBarConfiguration mAppBarConfiguration;
     private IntentFilter mIntentFilter = new IntentFilter();
     private BroadcastReceiver broadcastoastReceiver;
-    private IPCBroadcastReceiver ipcBroadcastReceiver;
+//    private IPCBroadcastReceiver ipcBroadcastReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+//        try {
+////            System.load("/data/app-lib/libnfc-nci.so");
+//            System.loadLibrary("c++_shared");
+//            System.loadLibrary("nfcgate-native");
+//        } catch (UnsatisfiedLinkError e) {
+//            e.printStackTrace();
+//        }
+
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -66,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onPostResume() {
         super.onPostResume();
         registerReceiver(broadcastoastReceiver, new IntentFilter("com.mateuszstarczyk.nfcopy.toaster"));
-        ipcBroadcastReceiver = new IPCBroadcastReceiver(this);
+//        ipcBroadcastReceiver = new IPCBroadcastReceiver(this);
         mIntentFilter.addAction(NfcAdapter.ACTION_ADAPTER_STATE_CHANGED);
     }
 
@@ -77,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
         tinydb.remove("last_deleted");
         tinydb.remove("last_deleted_index");
         unregisterReceiver(broadcastoastReceiver);
-        unregisterReceiver(ipcBroadcastReceiver);
+//        unregisterReceiver(ipcBroadcastReceiver);
     }
 
     @Override

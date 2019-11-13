@@ -57,7 +57,7 @@ public class DaemonConfiguration {
     }
 
     private void send(Intent intent) {
-        intent.setAction("tud.seemuh.nfcgate.daemoncall");
+        intent.setAction("com.mateuszstarczyk.nfcopy.daemoncall");
         intent.putExtra("test", "test");
         mContext.sendBroadcast(intent);
     }

@@ -33,6 +33,7 @@ import com.mateuszstarczyk.nfcopy.nfc.hce.DaemonConfiguration;
 import com.mateuszstarczyk.nfcopy.service.nfc.NfcCard;
 import com.mateuszstarczyk.nfcopy.service.nfc.NfcReader;
 import com.mateuszstarczyk.nfcopy.service.nfc.db.TinyDB;
+import com.mateuszstarczyk.nfcopy.util.NfcComm;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -72,12 +73,15 @@ public class NewCardFragment extends Fragment {
         nfcReader = new NfcReader(getActivity(), new NfcAdapter.ReaderCallback() {
             @Override
             public void onTagDiscovered(final Tag tag) {
+                Log.i("NFCOPY", tag.toString());
                 NfcManager manager = new NfcManager();
                 manager.setTag(tag);
-                manager.setAnticolData(manager.getAnticolData());
-//                nfcReader.disableReaderMode();
-                Log.i("INFO", tag.toString());
+                NfcComm anticol = manager.getAnticolData();
+                Log.i("NFCOPY", anticol.toString());
                 setEditMode();
+                manager.setAnticolData(anticol);
+                DaemonConfiguration.getInstance().enablePolling();
+//                nfcReader.disableReaderMode();
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
