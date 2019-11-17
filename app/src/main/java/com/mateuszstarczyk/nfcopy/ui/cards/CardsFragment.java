@@ -1,11 +1,9 @@
 package com.mateuszstarczyk.nfcopy.ui.cards;
 
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -18,7 +16,6 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
-import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
@@ -34,6 +31,7 @@ import com.mateuszstarczyk.nfcopy.R;
 import com.mateuszstarczyk.nfcopy.service.nfc.NfcCard;
 import com.mateuszstarczyk.nfcopy.service.nfc.db.TinyDB;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -254,9 +252,9 @@ public class CardsFragment extends Fragment {
         public void onBindViewHolder(@NonNull CardsViewHolder holder, int position) {
             holder.cardName.setText(cards.get(position).getName());
             holder.cardUID.setText(cards.get(position).getUID());
-            Bitmap bitmap = cards.get(position).getBitmap();
-            if (bitmap != null)
-                holder.cardPhoto.setImageBitmap(bitmap);
+            String path = cards.get(position).getImagePath();
+            if (path != null && ! path.isEmpty())
+                holder.cardPhoto.setImageURI(Uri.fromFile(new File(path)));
             else
                 holder.cardPhoto.setImageDrawable(getActivity().getDrawable(R.drawable.ic_menu_card));
         }

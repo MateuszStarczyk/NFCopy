@@ -1,11 +1,10 @@
 package com.mateuszstarczyk.nfcopy.ui.new_card;
 
-import android.accessibilityservice.AccessibilityService;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.inputmethodservice.Keyboard;
+import android.net.Uri;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.os.Bundle;
@@ -15,8 +14,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
@@ -32,7 +29,9 @@ import com.mateuszstarczyk.nfcopy.service.nfc.NfcCard;
 import com.mateuszstarczyk.nfcopy.service.nfc.NfcReader;
 import com.mateuszstarczyk.nfcopy.service.nfc.db.TinyDB;
 
-import java.io.FileNotFoundException;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,7 +40,6 @@ import java.util.Objects;
 import pl.bclogic.pulsator4droid.library.PulsatorLayout;
 
 import static android.app.Activity.RESULT_OK;
-import static com.mateuszstarczyk.nfcopy.service.ImageService.ivToBitmap;
 import static com.mateuszstarczyk.nfcopy.service.nfc.NfcReader.byteToString;
 
 public class NewCardFragment extends Fragment {
@@ -153,17 +151,46 @@ public class NewCardFragment extends Fragment {
         if (requestCode == PICK_IMAGE && resultCode == RESULT_OK) {
             if (data != null) {
                 try {
+                    final int THUMBNAIL_SIZE = 256;
                     InputStream inputStream = Objects.requireNonNull(getContext())
                             .getContentResolver()
                             .openInputStream(Objects.requireNonNull(data.getData()));
-                    newCardViewModel.setNfcCard(new NfcCard(tilCardId.getText().toString(), tilCardName.getText().toString(), tilCardClass.getText().toString(), BitmapFactory.decodeStream(inputStream)));
-                } catch (FileNotFoundException e) {
+                    Bitmap imageBitmap = BitmapFactory.decodeStream(inputStream);
+
+                    imageBitmap = Bitmap.createScaledBitmap(imageBitmap, THUMBNAIL_SIZE, THUMBNAIL_SIZE, false);
+
+                    File destFile = new File(getActivity().getApplicationInfo().dataDir,
+                            java.util.UUID.randomUUID() + ".png");
+                    FileOutputStream outStream = new FileOutputStream(destFile);
+                    imageBitmap.compress(Bitmap.CompressFormat.PNG, 0, outStream);
+                    newCardViewModel.setNfcCard(new NfcCard(tilCardId.getText().toString(),
+                            tilCardName.getText().toString(),
+                            tilCardClass.getText().toString(),
+                            destFile.getPath()));
+
+                    inputStream.close();
+                    outStream.close();
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         } else if (requestCode == PICK_CAMERA_PHOTO && resultCode == RESULT_OK) {
-            Bundle extras = data.getExtras();
-            newCardViewModel.setNfcCard(new NfcCard(tilCardId.getText().toString(), tilCardName.getText().toString(), tilCardClass.getText().toString(), (Bitmap)extras.get("data")));
+            try {
+                Bundle extras = data.getExtras();
+                Bitmap imageBitmap = (Bitmap) extras.get("data");
+                File destFile = new File(getActivity().getApplicationInfo().dataDir,
+                        java.util.UUID.randomUUID() + ".png");
+                FileOutputStream outStream = new FileOutputStream(destFile);
+                imageBitmap.compress(Bitmap.CompressFormat.PNG, 0, outStream);
+                newCardViewModel.setNfcCard(new NfcCard(tilCardId.getText().toString(),
+                        tilCardName.getText().toString(),
+                        tilCardClass.getText().toString(),
+                        destFile.getPath()));
+
+                outStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -199,7 +226,10 @@ public class NewCardFragment extends Fragment {
         TinyDB tinydb = new TinyDB(getActivity());
         ArrayList<NfcCard> tagsUIDs = tinydb.getListObject("nfc_cards", NfcCard.class);
 
-        tagsUIDs.add(new NfcCard(tilCardId.getText().toString(), tilCardName.getText().toString(), tilCardClass.getText().toString(), ivPreview));
+        if (newCardViewModel.getNfcCard() == null)
+            tagsUIDs.add(new NfcCard(tilCardId.getText().toString(), tilCardName.getText().toString(), tilCardClass.getText().toString(), null));
+        else
+            tagsUIDs.add(newCardViewModel.getNfcCard());
         tinydb.putListObject("nfc_cards", tagsUIDs);
         newCardViewModel.setEditMode(false);
         goToCardsView();
@@ -241,11 +271,13 @@ public class NewCardFragment extends Fragment {
                     tilCardId.setText(newCardViewModel.getNfcCard().getUID());
                     tilCardName.setText(newCardViewModel.getNfcCard().getName());
                     tilCardClass.setText(newCardViewModel.getNfcCard().getClassName());
-                    if (newCardViewModel.getNfcCard().getBitmap() == null) {
+                    if (newCardViewModel.getNfcCard().getImagePath() == null ||
+                            newCardViewModel.getNfcCard().getImagePath().isEmpty()) {
                         ivPreview.setVisibility(View.GONE);
                     } else {
                         ivPreview.setVisibility(View.VISIBLE);
-                        ivPreview.setImageBitmap(newCardViewModel.getNfcCard().getBitmap());
+                        ivPreview.setImageURI(Uri.fromFile(
+                                new File(newCardViewModel.getNfcCard().getImagePath())));
                     }
                 }
             });
@@ -257,7 +289,11 @@ public class NewCardFragment extends Fragment {
     public void onStop() {
         super.onStop();
         if (newCardViewModel.isEditMode()) {
-            newCardViewModel.setNfcCard(new NfcCard(tilCardId.getText().toString(), tilCardName.getText().toString(), tilCardClass.getText().toString(), ivToBitmap(ivPreview)));
+            if (newCardViewModel.getNfcCard() == null)
+                newCardViewModel.setNfcCard(new NfcCard(tilCardId.getText().toString(),
+                        tilCardName.getText().toString(),
+                        tilCardClass.getText().toString(),
+                        null));
         }
         nfcReader.disableReaderMode();
     }

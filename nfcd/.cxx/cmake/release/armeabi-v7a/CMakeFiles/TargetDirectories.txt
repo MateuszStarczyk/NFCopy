@@ -1,0 +1,3 @@
+C:/Users/Mateusz/AndroidStudioProjects/NFCopy/nfcd/.cxx/cmake/release/armeabi-v7a/CMakeFiles/nfcgate-native.dir
+C:/Users/Mateusz/AndroidStudioProjects/NFCopy/nfcd/.cxx/cmake/release/armeabi-v7a/CMakeFiles/edit_cache.dir
+C:/Users/Mateusz/AndroidStudioProjects/NFCopy/nfcd/.cxx/cmake/release/armeabi-v7a/CMakeFiles/rebuild_cache.dir
