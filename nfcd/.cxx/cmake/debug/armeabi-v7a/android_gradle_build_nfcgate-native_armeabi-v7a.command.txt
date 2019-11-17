@@ -1,8 +1,0 @@
-Executable : C:\Users\Mateusz\AppData\Local\Android\Sdk\cmake\3.6.4111459\bin\cmake.exe
-arguments : 
---build
-C:\Users\Mateusz\AndroidStudioProjects\NFCopy\nfcd\.cxx\cmake\debug\armeabi-v7a
---target
-nfcgate-native
-jvmArgs : 
-

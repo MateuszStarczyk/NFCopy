@@ -1,9 +1,0 @@
-[1/2] Building CXX object CMakeFiles/nfcgate-native.dir/src/main/jni/main.cpp.o
-C:\Users\Mateusz\AndroidStudioProjects\NFCopy\nfcd\src\main\jni\main.cpp:75:36: warning: format specifies type 'char *' but the argument has type 'fn' (aka 'int (*)()') [-Wformat]
-    LOGI("HOOKNFC test: (%s), %s", f, dlerror());
-                         ~~        ^
-C:\Users\Mateusz\AndroidStudioProjects\NFCopy\nfcd\src\main\jni/nfcd.h:14:66: note: expanded from macro 'LOGI'
-#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__ )
-                                                                 ^~~~~~~~~~~
-1 warning generated.
-[2/2] Linking CXX shared library ..\..\..\..\build\intermediates\cmake\debug\obj\armeabi-v7a\libnfcgate-native.so
