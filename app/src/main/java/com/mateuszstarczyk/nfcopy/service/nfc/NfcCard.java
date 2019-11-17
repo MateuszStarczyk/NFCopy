@@ -27,4 +27,20 @@ public class NfcCard {
     public String getImagePath() {
         return imagePath;
     }
+
+    public void setUID(String UID) {
+        this.UID = UID;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setClassName(String className) {
+        this.className = className;
+    }
+
+    public void setImagePath(String imagePath) {
+        this.imagePath = imagePath;
+    }
 }

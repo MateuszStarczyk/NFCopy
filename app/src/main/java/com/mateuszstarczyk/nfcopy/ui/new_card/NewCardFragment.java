@@ -1,6 +1,7 @@
 package com.mateuszstarczyk.nfcopy.ui.new_card;
 
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -23,6 +24,7 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 import com.mateuszstarczyk.nfcopy.R;
 import com.mateuszstarczyk.nfcopy.service.nfc.NfcCard;
@@ -71,12 +73,33 @@ public class NewCardFragment extends Fragment {
                 nfcReader.disableReaderMode();
                 Log.i("INFO", tag.toString());
 
-                setEditMode();
+                final String message = nfcReader.readTag(tag);
+
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        tilCardId.setText(byteToString(tag.getId()));
-                        tilCardClass.setText(Arrays.toString(tag.getTechList()));
+                        final String tagId = byteToString(tag.getId());
+                        final String tagTech = Arrays.toString(tag.getTechList());
+                        new MaterialAlertDialogBuilder(getActivity(), R.style.ThemeOverlay_MaterialComponents_MaterialAlertDialog_NFCopy)
+                                .setTitle("Scanned card")
+                                .setMessage(message)
+                                .setPositiveButton("Accept", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        setEditMode();
+                                        tilCardId.setText(tagId);
+                                        tilCardClass.setText(tagTech);
+                                    }
+                                })
+                                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        setScanMode();
+                                    }
+                                })
+                                .setCancelable(false)
+                                .show();
+
                     }
                 });
             }
@@ -227,16 +250,19 @@ public class NewCardFragment extends Fragment {
         ArrayList<NfcCard> tagsUIDs = tinydb.getListObject("nfc_cards", NfcCard.class);
 
         if (newCardViewModel.getNfcCard() == null)
-            tagsUIDs.add(new NfcCard(tilCardId.getText().toString(), tilCardName.getText().toString(), tilCardClass.getText().toString(), null));
+            tagsUIDs.add(new NfcCard(tilCardId.getText().toString(),
+                    tilCardName.getText().toString(),
+                    tilCardClass.getText().toString(),
+                    null));
         else
-            tagsUIDs.add(newCardViewModel.getNfcCard());
+            tagsUIDs.add(new NfcCard(tilCardId.getText().toString(),
+                    tilCardName.getText().toString(),
+                    tilCardClass.getText().toString(),
+                    newCardViewModel.getNfcCard().getImagePath()));
+
         tinydb.putListObject("nfc_cards", tagsUIDs);
         newCardViewModel.setEditMode(false);
         goToCardsView();
-    }
-
-    public void readTag(Tag tag){
-        System.out.println(tag.toString());
     }
 
     private void goToCardsView() {
@@ -263,8 +289,9 @@ public class NewCardFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        if (newCardViewModel.isEditMode()) {
+        if (newCardViewModel.isEditMode() && newCardViewModel.getNfcCard() != null) {
             nfcReader.disableReaderMode();
+
             getActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {

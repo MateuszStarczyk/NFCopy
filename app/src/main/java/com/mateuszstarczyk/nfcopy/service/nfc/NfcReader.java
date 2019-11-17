@@ -2,8 +2,10 @@ package com.mateuszstarczyk.nfcopy.service.nfc;
 
 import android.app.Activity;
 import android.nfc.NfcAdapter;
+import android.nfc.NfcManager;
 import android.nfc.Tag;
 import android.nfc.tech.MifareClassic;
+import android.nfc.tech.NfcA;
 import android.util.Log;
 
 import java.io.IOException;
@@ -16,17 +18,15 @@ public class NfcReader {
 
     private Activity activity;
     private NfcAdapter.ReaderCallback nfcReaderCallback;
-
-    public NfcReader(Activity activity) {
-        this.activity = activity;
-
-        this.nfcReaderCallback = new NfcAdapter.ReaderCallback() {
-            @Override
-            public void onTagDiscovered(Tag tag) {
-                Log.i("INFO", tag.toString());
-            }
-        };
-    }
+    public static final String MIFAREULTRALIGHT_NAME = "android.nfc.tech.MifareUltralight";
+    public static final String MIFARECLASSIC_NAME = "android.nfc.tech.MifareClassic";
+    public static final String NFCA_NAME = "android.nfc.tech.NfcA";
+    public static final String NFCB_NAME = "android.nfc.tech.NfcB";
+    public static final String NFCF_NAME = "android.nfc.tech.NfcF";
+    public static final String NFCV_NAME = "android.nfc.tech.NfcV";
+    public static final String NDEF_NAME = "android.nfc.tech.Ndef";
+    public static final String NDEFFORMATABLE_NAME = "android.nfc.tech.NdefFormatable";
+    public static final String ISODEP_NAME = "android.nfc.tech.IsoDep";
 
     public NfcReader(Activity activity, NfcAdapter.ReaderCallback nfcReaderCallback) {
         this.activity = activity;
@@ -55,25 +55,69 @@ public class NfcReader {
 
     public String readTag(Tag tag) {
         tag.getId();
+        StringBuilder message = new StringBuilder();
+        String temp = "";
+        for (String tech: tag.getTechList()) {
+            switch (tech) {
+                case MIFAREULTRALIGHT_NAME:
+                    temp = "android.nfc.tech.MifareUltralight";
+                    break;
+                case MIFARECLASSIC_NAME:
+                    temp = readMifareClassic(tag);
+                    break;
+                case NFCA_NAME:
+                    temp = "android.nfc.tech.NfcA";
+                    break;
+                case NFCB_NAME:
+                    temp = "android.nfc.tech.NfcB";
+                    break;
+                case NFCF_NAME:
+                    temp = "android.nfc.tech.NfcF";
+                    break;
+                case NFCV_NAME:
+                    temp = "android.nfc.tech.NfcV";
+                    break;
+                case NDEF_NAME:
+                    temp = "android.nfc.tech.Ndef";
+                    break;
+                case NDEFFORMATABLE_NAME:
+                    temp = "android.nfc.tech.NdefFormatable";
+                    break;
+                case ISODEP_NAME:
+                    temp = "android.nfc.tech.IsoDep";
+                    break;
+            }
+            if (temp.equals("Failed to read tag!"))
+                return temp;
+            else
+                message.append("\n").append(temp);
+        }
+        return message.toString();
+    }
+
+    public String readMifareClassic(Tag tag) {
+        String message = "Type: MifareClassic\n";
         MifareClassic mifare = MifareClassic.get(tag);
         try {
             mifare.connect();
-//            int numberOfBlocks = mifare.getBlockCount(); //64
-//            int sizeOfTag = mifare.getSize(); //1024 SIZE_1K
+            boolean isAllRead = true;
+            byte[] privateKey = new byte[0];
             int numberOfSectors = mifare.getSectorCount();
-//            byte[] payload = mifare.readBlock(0); //16
             for(int i=0; i< numberOfSectors; i++) {
 
                 boolean isAuthenticated = false;
 
                 if (mifare.authenticateSectorWithKeyA(i, MifareClassic.KEY_MIFARE_APPLICATION_DIRECTORY)) {
+                    privateKey = MifareClassic.KEY_MIFARE_APPLICATION_DIRECTORY;
                     isAuthenticated = true;
                 } else if (mifare.authenticateSectorWithKeyA(i, MifareClassic.KEY_DEFAULT)) {
+                    privateKey = MifareClassic.KEY_DEFAULT;
                     isAuthenticated = true;
                 } else if (mifare.authenticateSectorWithKeyA(i, MifareClassic.KEY_NFC_FORUM)) {
+                    privateKey = MifareClassic.KEY_NFC_FORUM;
                     isAuthenticated = true;
                 } else {
-                    Log.d("ERROR", "Authorization denied ");
+                    isAllRead = false;
                 }
 
                 if (isAuthenticated) {
@@ -83,9 +127,13 @@ public class NfcReader {
                     Log.d("INFO", s_block);
                 }
             }
-            return "";
+            if (isAllRead)
+                message += "Read with key: " + byteToString(privateKey) + "\nCard can be copied";
+            else
+                message += "Card is protected with private key\nCan't copy all information";
+
         } catch (IOException e) {
-            Log.e("ERROR", "IOException while reading MifareUltralight message...", e);
+            message = "Failed to read tag!";
         } finally {
             if (mifare != null) {
                 try {
@@ -96,9 +144,8 @@ public class NfcReader {
                 }
             }
         }
-        return null;
+        return message;
     }
-
     public static String byteToString(byte[] bytes) {
         StringBuilder sb = new StringBuilder();
         for (byte b : bytes) {

@@ -17,4 +17,9 @@
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
+    <style name="ThemeOverlay.MaterialComponents.MaterialAlertDialog.NFCopy" parent="Base.ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+        <item name="materialAlertDialogTitlePanelStyle">@style/MaterialAlertDialog.MaterialComponents.Title.Panel</item>
+        <item name="materialAlertDialogTitleIconStyle">@style/MaterialAlertDialog.MaterialComponents.Title.Icon</item>
+        <item name="materialAlertDialogTitleTextStyle">@style/MaterialAlertDialog.MaterialComponents.Title.Text</item>
+    </style>
 </resources>

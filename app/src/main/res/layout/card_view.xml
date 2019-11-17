@@ -27,21 +27,26 @@
                 android:contentDescription="@string/iv_photo"
                 android:scaleType="centerCrop" />
 
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_toEndOf="@+id/card_photo"
+                android:layout_centerVertical="true">
+
             <TextView
                 android:id="@+id/card_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_centerVertical="true"
-                android:layout_toEndOf="@+id/card_photo"
                 android:textSize="24sp" />
 
             <TextView
                 android:id="@+id/card_uid"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/card_name"
-                android:layout_toEndOf="@+id/card_photo" />
+                />
 
+        </LinearLayout>
         </RelativeLayout>
 
     </androidx.cardview.widget.CardView>
