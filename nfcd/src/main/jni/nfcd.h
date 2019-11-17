@@ -6,6 +6,7 @@
 #include <android/log.h>
 #include <jni.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include "vendor/libnfc.h"
 
 #define LOG_TAG "NATIVENFC"

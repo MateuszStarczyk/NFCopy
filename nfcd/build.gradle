@@ -17,8 +17,8 @@ android {
         externalNativeBuild {
             cmake {
                 cppFlags "-std=c++11 -fexceptions -frtti -marm -g"
-                arguments "-DANDROID_ARM_NEON=TRUE",'-DANDROID_STL=c++_shared'
-                abiFilters "armeabi-v7a"
+                arguments "-DANDROID_ARM_NEON=TRUE",'-DANDROID_STL=c++_shared', "-DANDROID_DISABLE_RELRO=True"
+
             }
         }
     }
@@ -29,7 +29,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    productFlavors {
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['jniLibs']
+        }
     }
     externalNativeBuild {
         cmake {
@@ -38,7 +41,9 @@ android {
     }
 }
 
+
 dependencies {
+    implementation fileTree(dir: 'jniLibs', include: ['.jar','.so'])
     compileOnly 'de.robv.android.xposed:api:82'
     compileOnly 'de.robv.android.xposed:api:82:sources'
 }

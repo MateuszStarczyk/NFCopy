@@ -11,65 +11,64 @@
 
 
 #include "hook.h"
-#include <cstring>
 #include <sys/mman.h>
 #include <unistd.h>
+#include <string.h>
 
-
-void inline hook_cacheflush(unsigned int begin, unsigned int end)
-{
+extern "C" {
+void inline hook_cacheflush(unsigned int begin, unsigned int end) {
 	const int syscall = 0xf0002;
 	__asm __volatile (
-		"mov	 r0, %0\n"			
-		"mov	 r1, %1\n"
-		"mov	 r7, %2\n"
-		"movs    r2, #0x0\n"
-		"svc     0x00000000\n"
-		:
-		:	"r" (begin), "r" (end), "r" (syscall)
-		:	"r0", "r1", "r7"
-		);
+	"mov	 r0, %0\n"
+	"mov	 r1, %1\n"
+	"mov	 r7, %2\n"
+	"movs    r2, #0x0\n"
+	"svc     0x00000000\n"
+	:
+	:    "r" (begin), "r" (end), "r" (syscall)
+	:    "r0", "r1", "r7"
+	);
 }
 
-int hook(struct hook_t *h, unsigned int addr, void *hookf)
-{
+int hook(struct hook_t *h, unsigned int addr, void *hookf) {
 	int i;
-	
-	log("HOOKNFC: addr  = %x\n", (unsigned int)addr);
-	log("HOOKNFC: hookf = %x\n", (unsigned int)hookf);
 
-	if ((addr % 4 == 0 && (unsigned int)hookf % 4 != 0) || (addr % 4 != 0 && (unsigned int)hookf % 4 == 0)) {
-		log("HOOKNFC: addr 0x%x and hook 0x%x\n don't match!\n", (unsigned int)addr, (unsigned int)hookf);
+	LOG("HOOKNFC: addr  = %x\n", (unsigned int) addr);
+	LOG("HOOKNFC: hookf = %x\n", (unsigned int) hookf);
+
+	if ((addr % 4 == 0 && (unsigned int) hookf % 4 != 0) ||
+		(addr % 4 != 0 && (unsigned int) hookf % 4 == 0)) {
+		LOG("HOOKNFC: addr 0x%x and hook 0x%x\n don't match!\n", (unsigned int) addr,
+			(unsigned int) hookf);
 		return -1;
 	}
 
-    // change the property of current page to writeable
+	// change the property of current page to writeable
 
-    unsigned int page_size = sysconf(_SC_PAGESIZE);
-    unsigned int entry_page_start = ~((page_size) - 1) & (addr);
-    if(mprotect((void*)entry_page_start, page_size, PROT_READ | PROT_WRITE | PROT_EXEC) != 0) {
-    	log("BLAD");
-    	return -1;
-    }
+	unsigned int page_size = sysconf(_SC_PAGESIZE);
+	unsigned int entry_page_start = ~((page_size) - 1) & (addr);
+	if (mprotect((void *) entry_page_start, page_size, PROT_READ | PROT_WRITE | PROT_EXEC) != 0) {
+		LOG("BLAD");
+		return -1;
+	}
 
 	if (addr % 4 == 0) {
-		log("ARM\n");
+		LOG("ARM\n");
 		h->thumb = 0;
-		h->patch = (unsigned int)hookf;
+		h->patch = (unsigned int) hookf;
 		h->orig = addr;
-		log("orig = %x\n", h->orig);
+		LOG("orig = %x\n", h->orig);
 		h->jump[0] = 0xe59ff000; // LDR pc, [pc, #0]
 		h->jump[1] = h->patch;
 		h->jump[2] = h->patch;
 		for (i = 0; i < 3; i++)
-			h->store[i] = ((int*)h->orig)[i];
+			h->store[i] = ((int *) h->orig)[i];
 		for (i = 0; i < 3; i++)
-			((int*)h->orig)[i] = h->jump[i];
-	}
-	else {
-		log("THUMB");
+			((int *) h->orig)[i] = h->jump[i];
+	} else {
+		LOG("THUMB");
 		h->thumb = 1;
-		h->patch = (unsigned int)hookf;
+		h->patch = (unsigned int) hookf;
 		h->orig = addr;
 		h->jumpt[1] = 0xb4;
 		h->jumpt[0] = 0x60; // push {r5,r6}
@@ -87,52 +86,48 @@ int hook(struct hook_t *h, unsigned int addr, void *hookf)
 		h->jumpt[12] = 0x20; // pop {r5, pc}
 		h->jumpt[15] = 0x46;
 		h->jumpt[14] = 0xaf; // mov pc, r5 ; just to pad to 4 byte boundary
-		memcpy(&h->jumpt[16], (unsigned char*)&h->patch, sizeof(unsigned int));
+		memcpy(&h->jumpt[16], (unsigned char *) &h->patch, sizeof(unsigned int));
 		unsigned int orig = addr - 1; // sub 1 to get real address
 		for (i = 0; i < 20; i++)
-			h->storet[i] = ((unsigned char*)orig)[i];
+			h->storet[i] = ((unsigned char *) orig)[i];
 		for (i = 0; i < 20; i++)
-			((unsigned char*)orig)[i] = h->jumpt[i];
+			((unsigned char *) orig)[i] = h->jumpt[i];
 	}
-	hook_cacheflush((unsigned int)h->orig, (unsigned int)h->orig+sizeof(h->jumpt));
+	hook_cacheflush((unsigned int) h->orig, (unsigned int) h->orig + sizeof(h->jumpt));
 	return 1;
 }
 
-void hook_precall(struct hook_t *h)
-{
+void hook_precall(struct hook_t *h) {
 	int i;
-	
+
 	if (h->thumb) {
 		unsigned int orig = h->orig - 1;
 		for (i = 0; i < 20; i++) {
-			((unsigned char*)orig)[i] = h->storet[i];
+			((unsigned char *) orig)[i] = h->storet[i];
 		}
-	}
-	else {
+	} else {
 		for (i = 0; i < 3; i++)
-			((int*)h->orig)[i] = h->store[i];
-	}	
-	hook_cacheflush((unsigned int)h->orig, (unsigned int)h->orig+sizeof(h->jumpt));
+			((int *) h->orig)[i] = h->store[i];
+	}
+	hook_cacheflush((unsigned int) h->orig, (unsigned int) h->orig + sizeof(h->jumpt));
 }
 
-void hook_postcall(struct hook_t *h)
-{
+void hook_postcall(struct hook_t *h) {
 	int i;
 
 	if (h->thumb) {
 		unsigned int orig = h->orig - 1;
 		for (i = 0; i < 20; i++)
-			((unsigned char*)orig)[i] = h->jumpt[i];
-	}
-	else {
+			((unsigned char *) orig)[i] = h->jumpt[i];
+	} else {
 		for (i = 0; i < 3; i++)
-			((int*)h->orig)[i] = h->jump[i];
+			((int *) h->orig)[i] = h->jump[i];
 	}
-	hook_cacheflush((unsigned int)h->orig, (unsigned int)h->orig+sizeof(h->jumpt));	
+	hook_cacheflush((unsigned int) h->orig, (unsigned int) h->orig + sizeof(h->jumpt));
 }
 
-void unhook(struct hook_t *h)
-{
-	log("unhooking %s = %x  hook = %x ", h->name, h->orig, h->patch)
+void unhook(struct hook_t *h) {
+	LOG("unhooking %s = %x  hook = %x ", h->name, h->orig, h->patch)
 	hook_precall(h);
+}
 }

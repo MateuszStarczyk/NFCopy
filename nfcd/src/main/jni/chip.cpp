@@ -1,6 +1,6 @@
 #include "nfcd.h"
 #include "vendor/adbi/hook.h"
-#include <cstring>
+#include <string.h>
 /**
  * Commands of the broadcom configuration interface
  */
@@ -9,7 +9,7 @@
 #define CFG_TYPE_UID   0x33
 #define CFG_TYPE_HIST  0x59
 
-static void uploadConfig(const s_chip_config config);
+static void uploadConfig(struct s_chip_config config);
 
 struct s_chip_config origValues = { 0 };
 struct s_chip_config patchValues = { 0 };
@@ -32,12 +32,12 @@ void nci_SetRfCback(tNFC_CONN_CBACK *p_cback) {
     hook_postcall(&hook_rfcback);
 }
 
-tNFC_STATUS nci_NfcSetConfig (uint8_t size, uint8_t *tlv) {
-    log("HOOKNFC: nci_NfcSetConfig() ENTER");
+extern "C" tNFC_STATUS nci_NfcSetConfig (uint8_t size, uint8_t *tlv) {
+    LOG("HOOKNFC: nci_NfcSetConfig() ENTER");
     hook_precall(&hook_config);
     tNFC_STATUS r = nci_orig_NfcSetConfig(size, tlv);
     hook_postcall(&hook_config);
-    log("HOOKNFC: nci_NfcSetConfig() LEAVE");
+    LOG("HOOKNFC: nci_NfcSetConfig() LEAVE");
     return r;
 }
 
@@ -61,7 +61,7 @@ void hook_SetRfCback(tNFC_CONN_CBACK *p_cback) {
 tNFC_STATUS hook_NfcDeactivate(UINT8 deactivate_type) {
     hook_precall(&hook_deactivate);
     tNFC_STATUS r;
-    log("HOOKNFC deactivate(), we got %d", deactivate_type);
+    LOG("HOOKNFC deactivate(), we got %d", deactivate_type);
     r = nfc_orig_deactivate(deactivate_type);
     hook_postcall(&hook_deactivate);
     return r;
@@ -69,7 +69,7 @@ tNFC_STATUS hook_NfcDeactivate(UINT8 deactivate_type) {
 
 tNFC_STATUS hook_NfcSenddata(UINT8 conn_id, BT_HDR *p_data) {
     hook_precall(&hook_senddata);
-    log("HOOKNFC senddata() offset: %d, len: %d", p_data->offset, p_data->len);
+    LOG("HOOKNFC senddata() offset: %d, len: %d", p_data->offset, p_data->len);
     loghex("HOOKNFC data:",  ((UINT8 *)(p_data + 1) + p_data->offset), 16);
     tNFC_STATUS r = nfc_orig_sendData(conn_id, p_data);
     hook_postcall(&hook_senddata);
@@ -78,7 +78,7 @@ tNFC_STATUS hook_NfcSenddata(UINT8 conn_id, BT_HDR *p_data) {
 
 tNFA_STATUS  hook_NfaStopRfDiscovery(void) {
     hook_precall(&hook_nfa_stop_rf_discovery);
-    log("HOOKNFC hook_NfaStopRfDiscovery()");
+    LOG("HOOKNFC hook_NfaStopRfDiscovery()");
     tNFA_STATUS r = nfa_orig_stop_rf_discovery();
     hook_postcall(&hook_nfa_stop_rf_discovery);
     return r;
@@ -86,7 +86,7 @@ tNFA_STATUS  hook_NfaStopRfDiscovery(void) {
 
 tNFA_STATUS  hook_NfaDisablePolling(void) {
     hook_precall(&hook_nfa_disable_polling);
-    log("HOOKNFC hook_nfa_disable_polling()");
+    LOG("HOOKNFC hook_nfa_disable_polling()");
     tNFA_STATUS r = nfa_orig_disable_polling();
     hook_postcall(&hook_nfa_disable_polling);
     return r;
@@ -94,7 +94,7 @@ tNFA_STATUS  hook_NfaDisablePolling(void) {
 
 tNFA_STATUS hook_NfaStartRfDiscovery() {
     hook_precall(&hook_nfa_start_rf_discovery);
-    log("HOOKNFC hook_NfaStartRfDiscovery()")
+    LOG("HOOKNFC hook_NfaStartRfDiscovery()")
     tNFA_STATUS r = nfa_orig_start_rf_discovery();
     hook_postcall(&hook_nfa_start_rf_discovery);
     return r;
@@ -102,7 +102,7 @@ tNFA_STATUS hook_NfaStartRfDiscovery() {
 
 tNFA_STATUS hook_NfaEnablePolling(tNFA_TECHNOLOGY_MASK poll_mask) {
     hook_precall(&hook_nfa_enable_polling);
-    log("HOOKNFC hook_NfaEnablePolling() 0x%x", poll_mask);
+    LOG("HOOKNFC hook_NfaEnablePolling() 0x%x", poll_mask);
     tNFA_STATUS r = nfa_orig_enable_polling(poll_mask);
     hook_postcall(&hook_nfa_enable_polling);
     return r;
@@ -214,13 +214,13 @@ static void uploadConfig(const struct s_chip_config config) {
 }
 
 void disablePolling() {
-    log("HOOKNFC disable polling");
+    LOG("HOOKNFC disable polling");
     hook_NfaDisablePolling();
     hook_NfcDeactivate(0);
 }
 
 void enablePolling() {
-    log("HOOKNFC enablePolling()");
+    LOG("HOOKNFC enablePolling()");
     hook_NfcDeactivate(3);
     hook_NfaStartRfDiscovery();
     hook_NfaEnablePolling(0xff);

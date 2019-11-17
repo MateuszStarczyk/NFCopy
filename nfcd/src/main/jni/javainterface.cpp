@@ -1,5 +1,5 @@
+#include <string.h>
 #include "nfcd.h"
-#include <cstring>
 
 extern "C" {
     JNIEXPORT jboolean JNICALL Java_com_mateuszstarczyk_nfcopy_xposed_Native_isEnabled(JNIEnv* env, jobject javaThis);

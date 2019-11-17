@@ -34,6 +34,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        System.loadLibrary("c++_shared");
+
+        System.loadLibrary("nfcgate-native");
 //        try {
 ////            System.load("/data/app-lib/libnfc-nci.so");
 //            System.loadLibrary("c++_shared");

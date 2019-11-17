@@ -9,7 +9,7 @@
  */
 
 #include <android/log.h>
-#define log(...) __android_log_print(ANDROID_LOG_DEBUG, "ADBI", __VA_ARGS__);
+#define LOG(...) __android_log_print(ANDROID_LOG_DEBUG, "ADBI", __VA_ARGS__);
 
 struct hook_t {
 	unsigned int jump[3];
@@ -23,8 +23,8 @@ struct hook_t {
 	void *data;
 };
 
-void hook_cacheflush(unsigned int begin, unsigned int end);	
-void hook_precall(struct hook_t *h);
-void hook_postcall(struct hook_t *h);
-int hook(struct hook_t *h, unsigned int addr, void *hookf);
-void unhook(struct hook_t *h);
+extern "C" void hook_cacheflush(unsigned int begin, unsigned int end);
+extern "C" void hook_precall(struct hook_t *h);
+extern "C" void hook_postcall(struct hook_t *h);
+extern "C" int hook(struct hook_t *h, unsigned int addr, void *hookf);
+extern "C" void unhook(struct hook_t *h);
