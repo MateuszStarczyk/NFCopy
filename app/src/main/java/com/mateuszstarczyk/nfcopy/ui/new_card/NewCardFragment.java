@@ -4,7 +4,7 @@ import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.graphics.ImageDecoder;
 import android.net.Uri;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
@@ -28,13 +28,13 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 import com.mateuszstarczyk.nfcopy.R;
 import com.mateuszstarczyk.nfcopy.service.nfc.NfcCard;
+import com.mateuszstarczyk.nfcopy.service.nfc.NfcMessage;
 import com.mateuszstarczyk.nfcopy.service.nfc.NfcReader;
 import com.mateuszstarczyk.nfcopy.service.nfc.db.TinyDB;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
@@ -68,40 +68,20 @@ public class NewCardFragment extends Fragment {
         pulsator = root.findViewById(R.id.pulsator);
 
         nfcReader = new NfcReader(getActivity(), new NfcAdapter.ReaderCallback() {
+
             @Override
-            public void onTagDiscovered(final Tag tag) {
-                nfcReader.disableReaderMode();
+            public void onTagDiscovered(Tag tag) {
                 Log.i("INFO", tag.toString());
+                NfcMessage nfcMessage = nfcReader.readTag(tag);
+                nfcReader.disableReaderMode();
+                NfcCard nfcCard = new NfcCard(byteToString(tag.getId()), "",
+                        tag.getTechList(), null, nfcMessage);
+                newCardViewModel.setNfcCard(nfcCard);
 
-                final String message = nfcReader.readTag(tag);
-
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        final String tagId = byteToString(tag.getId());
-                        final String tagTech = Arrays.toString(tag.getTechList());
-                        new MaterialAlertDialogBuilder(getActivity(), R.style.ThemeOverlay_MaterialComponents_MaterialAlertDialog_NFCopy)
-                                .setTitle("Scanned card")
-                                .setMessage(message)
-                                .setPositiveButton("Accept", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        setEditMode();
-                                        tilCardId.setText(tagId);
-                                        tilCardClass.setText(tagTech);
-                                    }
-                                })
-                                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        setScanMode();
-                                    }
-                                })
-                                .setCancelable(false)
-                                .show();
-
-                    }
-                });
+                if (nfcMessage != null)
+                    showSuccessfulPopUp(nfcMessage.getPopUpMessage(getActivity()));
+                else
+                showFailedPopUp();
             }
         });
 
@@ -175,23 +155,19 @@ public class NewCardFragment extends Fragment {
             if (data != null) {
                 try {
                     final int THUMBNAIL_SIZE = 256;
-                    InputStream inputStream = Objects.requireNonNull(getContext())
-                            .getContentResolver()
-                            .openInputStream(Objects.requireNonNull(data.getData()));
-                    Bitmap imageBitmap = BitmapFactory.decodeStream(inputStream);
+
+                    ImageDecoder.Source source = ImageDecoder
+                            .createSource(Objects.requireNonNull(getContext())
+                                    .getContentResolver(), Objects.requireNonNull(data.getData()));
+                    Bitmap imageBitmap = ImageDecoder.decodeBitmap(source);
 
                     imageBitmap = Bitmap.createScaledBitmap(imageBitmap, THUMBNAIL_SIZE, THUMBNAIL_SIZE, false);
 
-                    File destFile = new File(getActivity().getApplicationInfo().dataDir,
+                    File destFile = new File(Objects.requireNonNull(getActivity()).getApplicationInfo().dataDir,
                             java.util.UUID.randomUUID() + ".png");
                     FileOutputStream outStream = new FileOutputStream(destFile);
                     imageBitmap.compress(Bitmap.CompressFormat.PNG, 0, outStream);
-                    newCardViewModel.setNfcCard(new NfcCard(tilCardId.getText().toString(),
-                            tilCardName.getText().toString(),
-                            tilCardClass.getText().toString(),
-                            destFile.getPath()));
-
-                    inputStream.close();
+                    newCardViewModel.getNfcCard().setImagePath(destFile.getPath());
                     outStream.close();
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -200,15 +176,12 @@ public class NewCardFragment extends Fragment {
         } else if (requestCode == PICK_CAMERA_PHOTO && resultCode == RESULT_OK) {
             try {
                 Bundle extras = data.getExtras();
-                Bitmap imageBitmap = (Bitmap) extras.get("data");
-                File destFile = new File(getActivity().getApplicationInfo().dataDir,
+                Bitmap imageBitmap = (Bitmap) Objects.requireNonNull(extras).get("data");
+                File destFile = new File(Objects.requireNonNull(getActivity()).getApplicationInfo().dataDir,
                         java.util.UUID.randomUUID() + ".png");
                 FileOutputStream outStream = new FileOutputStream(destFile);
-                imageBitmap.compress(Bitmap.CompressFormat.PNG, 0, outStream);
-                newCardViewModel.setNfcCard(new NfcCard(tilCardId.getText().toString(),
-                        tilCardName.getText().toString(),
-                        tilCardClass.getText().toString(),
-                        destFile.getPath()));
+                Objects.requireNonNull(imageBitmap).compress(Bitmap.CompressFormat.PNG, 0, outStream);
+                newCardViewModel.getNfcCard().setImagePath(destFile.getPath());
 
                 outStream.close();
             } catch (IOException e) {
@@ -220,11 +193,23 @@ public class NewCardFragment extends Fragment {
     private void setEditMode() {
         newCardViewModel.setEditMode(true);
         nfcReader.disableReaderMode();
-        getActivity().runOnUiThread(new Runnable() {
+        Objects.requireNonNull(getActivity()).runOnUiThread(new Runnable() {
             public void run() {
                 pulsator.setVisibility(View.GONE);
                 root.findViewById(R.id.iv_scan).setVisibility(View.GONE);
                 newCardView.setVisibility(View.VISIBLE);
+
+                tilCardId.setText(newCardViewModel.getNfcCard().getUID());
+                tilCardClass.setText(Arrays.toString(newCardViewModel.getNfcCard().getTechList()));
+                tilCardName.setText(newCardViewModel.getNfcCard().getName());
+                if (newCardViewModel.getNfcCard().getImagePath() == null ||
+                        newCardViewModel.getNfcCard().getImagePath().isEmpty()) {
+                    ivPreview.setVisibility(View.GONE);
+                } else {
+                    ivPreview.setVisibility(View.VISIBLE);
+                    ivPreview.setImageURI(Uri.fromFile(
+                            new File(newCardViewModel.getNfcCard().getImagePath())));
+                }
             }
         });
     }
@@ -232,11 +217,56 @@ public class NewCardFragment extends Fragment {
     private void setScanMode() {
         newCardViewModel.setEditMode(false);
         nfcReader.enableReaderMode();
-        getActivity().runOnUiThread(new Runnable() {
+        Objects.requireNonNull(getActivity()).runOnUiThread(new Runnable() {
             public void run() {
                 newCardView.setVisibility(View.GONE);
                 pulsator.setVisibility(View.VISIBLE);
                 root.findViewById(R.id.iv_scan). setVisibility(View.VISIBLE);
+            }
+        });
+    }
+
+    private void showFailedPopUp() {
+        Objects.requireNonNull(getActivity()).runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                new MaterialAlertDialogBuilder(Objects.requireNonNull(getActivity()), R.style.ThemeOverlay_MaterialComponents_NFCopy_MaterialAlertDialog)
+                        .setTitle(getActivity().getText(R.string.error))
+                        .setMessage(getActivity().getText(R.string.read_failed))
+                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                setScanMode();
+                            }
+                        })
+                        .setCancelable(false)
+                        .show();
+
+            }
+        });
+    }
+
+    private void showSuccessfulPopUp(final String message) {
+        Objects.requireNonNull(getActivity()).runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                new MaterialAlertDialogBuilder(Objects.requireNonNull(getActivity()), R.style.ThemeOverlay_MaterialComponents_NFCopy_MaterialAlertDialog)
+                        .setTitle(getActivity().getText(R.string.scanned_card))
+                        .setMessage(message)
+                        .setPositiveButton(getActivity().getText(R.string.accept), new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                setEditMode();
+                            }
+                        })
+                        .setNegativeButton(getActivity().getText(R.string.cancel), new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                setScanMode();
+                            }
+                        })
+                        .setCancelable(false)
+                        .show();
             }
         });
     }
@@ -246,19 +276,11 @@ public class NewCardFragment extends Fragment {
     }
 
     private void onClickAdd() {
-        TinyDB tinydb = new TinyDB(getActivity());
+        TinyDB tinydb = new TinyDB(Objects.requireNonNull(getActivity()));
         ArrayList<NfcCard> tagsUIDs = tinydb.getListObject("nfc_cards", NfcCard.class);
 
-        if (newCardViewModel.getNfcCard() == null)
-            tagsUIDs.add(new NfcCard(tilCardId.getText().toString(),
-                    tilCardName.getText().toString(),
-                    tilCardClass.getText().toString(),
-                    null));
-        else
-            tagsUIDs.add(new NfcCard(tilCardId.getText().toString(),
-                    tilCardName.getText().toString(),
-                    tilCardClass.getText().toString(),
-                    newCardViewModel.getNfcCard().getImagePath()));
+        newCardViewModel.getNfcCard().setName(Objects.requireNonNull(tilCardName.getText()).toString());
+        tagsUIDs.add(newCardViewModel.getNfcCard());
 
         tinydb.putListObject("nfc_cards", tagsUIDs);
         newCardViewModel.setEditMode(false);
@@ -276,14 +298,15 @@ public class NewCardFragment extends Fragment {
     }
 
     private void hideKeyboard() {
-        InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Activity.INPUT_METHOD_SERVICE);
+        InputMethodManager imm = (InputMethodManager) Objects.requireNonNull(getActivity())
+                .getSystemService(Activity.INPUT_METHOD_SERVICE);
         //Find the currently focused view, so we can grab the correct window token from it.
         View view = getActivity().getCurrentFocus();
         //If no view currently has focus, create a new one, just so we can grab a window token from it
         if (view == null) {
             view = new View(getActivity());
         }
-        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        Objects.requireNonNull(imm).hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 
     @Override
@@ -291,23 +314,7 @@ public class NewCardFragment extends Fragment {
         super.onResume();
         if (newCardViewModel.isEditMode() && newCardViewModel.getNfcCard() != null) {
             nfcReader.disableReaderMode();
-
-            getActivity().runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    tilCardId.setText(newCardViewModel.getNfcCard().getUID());
-                    tilCardName.setText(newCardViewModel.getNfcCard().getName());
-                    tilCardClass.setText(newCardViewModel.getNfcCard().getClassName());
-                    if (newCardViewModel.getNfcCard().getImagePath() == null ||
-                            newCardViewModel.getNfcCard().getImagePath().isEmpty()) {
-                        ivPreview.setVisibility(View.GONE);
-                    } else {
-                        ivPreview.setVisibility(View.VISIBLE);
-                        ivPreview.setImageURI(Uri.fromFile(
-                                new File(newCardViewModel.getNfcCard().getImagePath())));
-                    }
-                }
-            });
+            setEditMode();
         } else
             nfcReader.enableReaderMode();
     }
@@ -315,13 +322,8 @@ public class NewCardFragment extends Fragment {
     @Override
     public void onStop() {
         super.onStop();
-        if (newCardViewModel.isEditMode()) {
-            if (newCardViewModel.getNfcCard() == null)
-                newCardViewModel.setNfcCard(new NfcCard(tilCardId.getText().toString(),
-                        tilCardName.getText().toString(),
-                        tilCardClass.getText().toString(),
-                        null));
-        }
+        if (newCardViewModel.isEditMode())
+            newCardViewModel.getNfcCard().setName(Objects.requireNonNull(tilCardName.getText()).toString());
         nfcReader.disableReaderMode();
     }
 }

@@ -28,8 +28,7 @@ public class MainActivity extends AppCompatActivity {
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
         mAppBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.nav_cards, R.id.nav_new_card,
-                R.id.nav_settings, R.id.nav_share, R.id.nav_send)
+                R.id.nav_cards, R.id.nav_new_card)
                 .setDrawerLayout(drawer)
                 .build();
         TinyDB tinydb = new TinyDB(this);

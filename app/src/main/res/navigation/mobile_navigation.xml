@@ -16,22 +16,4 @@
         android:name="com.mateuszstarczyk.nfcopy.ui.new_card.NewCardFragment"
         android:label="@string/menu_new_card"
         tools:layout="@layout/fragment_new_card" />
-
-    <fragment
-        android:id="@+id/nav_settings"
-        android:name="com.mateuszstarczyk.nfcopy.ui.settings.SettingsFragment"
-        android:label="@string/menu_settings"
-        tools:layout="@layout/fragment_settings" />
-
-    <fragment
-        android:id="@+id/nav_share"
-        android:name="com.mateuszstarczyk.nfcopy.ui.share.ShareFragment"
-        android:label="@string/menu_share"
-        tools:layout="@layout/fragment_share" />
-
-    <fragment
-        android:id="@+id/nav_send"
-        android:name="com.mateuszstarczyk.nfcopy.ui.send.SendFragment"
-        android:label="@string/menu_send"
-        tools:layout="@layout/fragment_send" />
 </navigation>

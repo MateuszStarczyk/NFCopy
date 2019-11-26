@@ -17,9 +17,22 @@
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
-    <style name="ThemeOverlay.MaterialComponents.MaterialAlertDialog.NFCopy" parent="Base.ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+    <style name="ThemeOverlay.MaterialComponents.NFCopy.MaterialAlertDialog" parent="Base.ThemeOverlay.MaterialComponents.MaterialAlertDialog">
         <item name="materialAlertDialogTitlePanelStyle">@style/MaterialAlertDialog.MaterialComponents.Title.Panel</item>
         <item name="materialAlertDialogTitleIconStyle">@style/MaterialAlertDialog.MaterialComponents.Title.Icon</item>
         <item name="materialAlertDialogTitleTextStyle">@style/MaterialAlertDialog.MaterialComponents.Title.Text</item>
+    </style>
+    <style name="ThemeOverlay.MaterialComponents.NFCopy.FullScreenDialog" parent="Base.ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">fill_parent</item>
+        <item name="android:windowBackground">@color/white</item>
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:buttonGravity">bottom</item>
+        <item name="materialAlertDialogTitlePanelStyle">@style/MaterialAlertDialog.MaterialComponents.Title.Panel</item>
+        <item name="materialAlertDialogTitleIconStyle">@style/MaterialAlertDialog.MaterialComponents.Title.Icon</item>
+        <item name="materialAlertDialogTitleTextStyle">@style/MaterialAlertDialog.MaterialComponents.Title.Text</item>
+
+<!--        <item name="android:layout_width"></item>-->
+<!--        <item name="android:layout_height">match_parent</item>-->
     </style>
 </resources>

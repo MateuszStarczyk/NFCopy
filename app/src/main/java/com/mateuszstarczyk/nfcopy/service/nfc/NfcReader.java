@@ -1,32 +1,27 @@
 package com.mateuszstarczyk.nfcopy.service.nfc;
 
 import android.app.Activity;
+import android.nfc.FormatException;
 import android.nfc.NfcAdapter;
-import android.nfc.NfcManager;
 import android.nfc.Tag;
+import android.nfc.tech.IsoDep;
 import android.nfc.tech.MifareClassic;
+import android.nfc.tech.MifareUltralight;
+import android.nfc.tech.Ndef;
 import android.nfc.tech.NfcA;
+import android.nfc.tech.NfcB;
+import android.nfc.tech.NfcF;
+import android.nfc.tech.NfcV;
 import android.util.Log;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 
-import static com.mateuszstarczyk.nfcopy.service.nfc.Const.NFC_ADAPTER;
-import static com.mateuszstarczyk.nfcopy.service.nfc.Const.READER_FLAGS;
+import static com.mateuszstarczyk.nfcopy.service.nfc.Const.*;
 
 public class NfcReader {
 
     private Activity activity;
     private NfcAdapter.ReaderCallback nfcReaderCallback;
-    public static final String MIFAREULTRALIGHT_NAME = "android.nfc.tech.MifareUltralight";
-    public static final String MIFARECLASSIC_NAME = "android.nfc.tech.MifareClassic";
-    public static final String NFCA_NAME = "android.nfc.tech.NfcA";
-    public static final String NFCB_NAME = "android.nfc.tech.NfcB";
-    public static final String NFCF_NAME = "android.nfc.tech.NfcF";
-    public static final String NFCV_NAME = "android.nfc.tech.NfcV";
-    public static final String NDEF_NAME = "android.nfc.tech.Ndef";
-    public static final String NDEFFORMATABLE_NAME = "android.nfc.tech.NdefFormatable";
-    public static final String ISODEP_NAME = "android.nfc.tech.IsoDep";
 
     public NfcReader(Activity activity, NfcAdapter.ReaderCallback nfcReaderCallback) {
         this.activity = activity;
@@ -53,87 +48,149 @@ public class NfcReader {
         }
     }
 
-    public String readTag(Tag tag) {
+    public NfcMessage readTag(Tag tag) {
         tag.getId();
-        StringBuilder message = new StringBuilder();
+        NfcMessage nfcMessage = new NfcMessage();
         String temp = "";
+        boolean isSuccess = true;
         for (String tech: tag.getTechList()) {
             switch (tech) {
                 case MIFAREULTRALIGHT_NAME:
-                    temp = "android.nfc.tech.MifareUltralight";
+                    isSuccess = readMifareUltralight(tag, nfcMessage);
                     break;
                 case MIFARECLASSIC_NAME:
-                    temp = readMifareClassic(tag);
+                    isSuccess = readMifareClassic(tag, nfcMessage);
                     break;
                 case NFCA_NAME:
-                    temp = "android.nfc.tech.NfcA";
+                    NfcA nfcA = NfcA.get(tag);
+                    nfcMessage.addMessage(NFCA_NAME)
+                            .addMessage("Atqa: ")
+                            .addMessage(convertHexToString(byteToString(nfcA.getAtqa())));
                     break;
                 case NFCB_NAME:
-                    temp = "android.nfc.tech.NfcB";
+                    NfcB nfcB = NfcB.get(tag);
+                    nfcMessage.addMessage(NFCB_NAME)
+                            .addMessage("ApplicationData: ")
+                            .addMessage(convertHexToString(byteToString(nfcB.getApplicationData())))
+                            .addMessage("ProtocolInfo: ")
+                            .addMessage(convertHexToString(byteToString(nfcB.getProtocolInfo())));
                     break;
                 case NFCF_NAME:
-                    temp = "android.nfc.tech.NfcF";
+                    NfcF nfcF = NfcF.get(tag);
+                    nfcMessage.addMessage(NFCF_NAME)
+                            .addMessage("Manufacturer: ")
+                            .addMessage(convertHexToString(byteToString(nfcF.getManufacturer())))
+                            .addMessage("SystemCode: ")
+                            .addMessage(convertHexToString(byteToString(nfcF.getSystemCode())));
                     break;
                 case NFCV_NAME:
-                    temp = "android.nfc.tech.NfcV";
+                    NfcV nfcV = NfcV.get(tag);
+                    nfcMessage.addMessage(NFCV_NAME)
+                            .addMessage("ResponseFlags: ")
+                            .addMessage(convertHexToString(String.format("%02X", nfcV.getResponseFlags())));
                     break;
                 case NDEF_NAME:
-                    temp = "android.nfc.tech.Ndef";
+                    Ndef ndef = Ndef.get(tag);
+                    try {
+                        ndef.connect();
+                        nfcMessage.addMessage(NDEF_NAME)
+                                .addMessage("ResponseFlags: ")
+                                .addMessage(convertHexToString(ndef.getNdefMessage().toString()));
+                    } catch (FormatException | IOException e) {
+                        e.printStackTrace();
+                        isSuccess = false;
+                    }
                     break;
                 case NDEFFORMATABLE_NAME:
-                    temp = "android.nfc.tech.NdefFormatable";
                     break;
                 case ISODEP_NAME:
-                    temp = "android.nfc.tech.IsoDep";
+                    IsoDep isoDep = IsoDep.get(tag);
+                    isoDep.getHiLayerResponse();
+
+                    nfcMessage.addMessage(ISODEP_NAME)
+                            .addMessage("HiLayerResponse: ")
+                            .addMessage(convertHexToString(byteToString(isoDep.getHiLayerResponse())))
+                            .addMessage("HistoricalBytes: ")
+                            .addMessage(convertHexToString(byteToString(isoDep.getHistoricalBytes())));
                     break;
             }
-            if (temp.equals("Failed to read tag!"))
-                return temp;
-            else
-                message.append("\n").append(temp);
+            if (!isSuccess)
+                return null;
         }
-        return message.toString();
+        return nfcMessage;
     }
 
-    public String readMifareClassic(Tag tag) {
-        String message = "Type: MifareClassic\n";
+    private String convertHexToString(String hex){
+
+        StringBuilder sb = new StringBuilder();
+        StringBuilder temp = new StringBuilder();
+
+        //49204c6f7665204a617661 split into two characters 49, 20, 4c...
+        for( int i=0; i<hex.length()-1; i+=2 ){
+
+            //grab the hex in pairs
+            String output = hex.substring(i, (i + 2));
+            //convert hex to decimal
+            int decimal = Integer.parseInt(output, 16);
+            //convert the decimal to character
+            sb.append((char)decimal);
+
+            temp.append(decimal);
+        }
+        System.out.println("Decimal : " + temp.toString());
+
+        return sb.toString();
+    }
+
+    private boolean readMifareClassic(Tag tag, NfcMessage nfcMessage) {
         MifareClassic mifare = MifareClassic.get(tag);
         try {
             mifare.connect();
-            boolean isAllRead = true;
-            byte[] privateKey = new byte[0];
+            StringBuilder privateKeys = new StringBuilder();
+            StringBuilder readSectors = new StringBuilder();
+            StringBuilder readSectorsASCII = new StringBuilder();
             int numberOfSectors = mifare.getSectorCount();
-            for(int i=0; i< numberOfSectors; i++) {
+            for(int i = 0; i < numberOfSectors; i++) {
 
                 boolean isAuthenticated = false;
 
                 if (mifare.authenticateSectorWithKeyA(i, MifareClassic.KEY_MIFARE_APPLICATION_DIRECTORY)) {
-                    privateKey = MifareClassic.KEY_MIFARE_APPLICATION_DIRECTORY;
+                    privateKeys.append("Sector").append(i).append(": ").append(byteToString(MifareClassic.KEY_MIFARE_APPLICATION_DIRECTORY)).append("\n");
                     isAuthenticated = true;
                 } else if (mifare.authenticateSectorWithKeyA(i, MifareClassic.KEY_DEFAULT)) {
-                    privateKey = MifareClassic.KEY_DEFAULT;
+                    privateKeys.append("Sector").append(i).append(": ").append(byteToString(MifareClassic.KEY_DEFAULT)).append("\n");
                     isAuthenticated = true;
                 } else if (mifare.authenticateSectorWithKeyA(i, MifareClassic.KEY_NFC_FORUM)) {
-                    privateKey = MifareClassic.KEY_NFC_FORUM;
+                    privateKeys.append("Sector").append(i).append(": ").append(byteToString(MifareClassic.KEY_NFC_FORUM)).append("\n");
                     isAuthenticated = true;
                 } else {
-                    isAllRead = false;
+                    privateKeys.append("Sector").append(i).append(": NOT STANDARD KEY").append("\n");
+                    nfcMessage.setCopyable(false);
                 }
 
                 if (isAuthenticated) {
                     int block_index = mifare.sectorToBlock(i);
                     byte[] block = mifare.readBlock(block_index);
-                    String s_block = new String(block, Charset.forName("US-ASCII"));
-                    Log.d("INFO", s_block);
+                    String sBlock = byteToString(block);
+                    readSectors.append("Sector").append(i).append(": ").append(sBlock).append("\n");
+                    readSectorsASCII.append("Sector").append(i).append(": ")
+                            .append(convertHexToString(sBlock)).append("\n");
                 }
             }
-            if (isAllRead)
-                message += "Read with key: " + byteToString(privateKey) + "\nCard can be copied";
-            else
-                message += "Card is protected with private key\nCan't copy all information";
+
+            nfcMessage.addKeys(MIFARECLASSIC_NAME)
+                    .addKeys("\n")
+                    .addKeys(privateKeys.toString());
+            nfcMessage.addSectors(MIFARECLASSIC_NAME)
+                    .addSectors("\n")
+                    .addSectors(readSectors.toString());
+            nfcMessage.addSectorsASCII(MIFARECLASSIC_NAME)
+                    .addSectorsASCII("\n")
+                    .addSectorsASCII(readSectorsASCII.toString());
 
         } catch (IOException e) {
-            message = "Failed to read tag!";
+            e.printStackTrace();
+            return false;
         } finally {
             if (mifare != null) {
                 try {
@@ -144,13 +201,57 @@ public class NfcReader {
                 }
             }
         }
-        return message;
+        return true;
     }
+
+    private boolean readMifareUltralight(Tag tag, NfcMessage nfcMessage) {
+        MifareUltralight mifare = MifareUltralight.get(tag);
+        try {
+            mifare.connect();
+            StringBuilder readPages = new StringBuilder();
+            StringBuilder readPagesASCII = new StringBuilder();
+            int numberOfSectors = 0;
+            if(mifare.getType() == MifareUltralight.TYPE_ULTRALIGHT)
+                numberOfSectors = 16;
+            else if (mifare.getType() == MifareUltralight.TYPE_ULTRALIGHT_C)
+                numberOfSectors = 48;
+            for(int i = 0; i < numberOfSectors; i++) {
+                byte[] block = mifare.readPages(i);
+                String sBlock = byteToString(block);
+                readPages.append("Page").append(i).append(": ").append(sBlock).append("\n");
+                readPagesASCII.append("Page").append(i).append(": ")
+                        .append(convertHexToString(sBlock)).append("\n");
+
+            }
+            nfcMessage.addMessage("\n")
+                    .addMessage(MIFAREULTRALIGHT_NAME)
+                    .addMessage("\nPages:\n")
+                    .addMessage(readPages.toString());
+            nfcMessage.addMessage("Pages (ASCII):\n")
+                    .addMessage(readPagesASCII.toString());
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (mifare != null) {
+                try {
+                    mifare.close();
+                }
+                catch (IOException e) {
+                    Log.e("ERROR", "Error closing tag...", e);
+                }
+            }
+        }
+        return true;
+    }
+
     public static String byteToString(byte[] bytes) {
         StringBuilder sb = new StringBuilder();
-        for (byte b : bytes) {
-            sb.append(String.format("%02X", b));
-        }
+        if (bytes != null)
+            for (byte b : bytes) {
+                sb.append(String.format("%02X", b));
+            }
 
         return sb.toString();
     }

@@ -1,5 +1,6 @@
 package com.mateuszstarczyk.nfcopy.ui.cards;
 
+import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
@@ -15,6 +16,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
@@ -25,6 +27,7 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.mateuszstarczyk.nfcopy.R;
@@ -33,6 +36,7 @@ import com.mateuszstarczyk.nfcopy.service.nfc.db.TinyDB;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Objects;
 
 public class CardsFragment extends Fragment {
@@ -101,8 +105,13 @@ public class CardsFragment extends Fragment {
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == R.id.action_delete_all){
-            tinydb.putListObject("nfc_cards", new ArrayList<NfcCard>());
+        if (item.getItemId() == R.id.action_delete_all) {
+            int size = adapter.cards.size();
+            adapter.cards = new ArrayList<>();
+            tinydb.putListObject("nfc_cards", adapter.cards);
+            for (int i = 0; i < size; i++) {
+                adapter.notifyItemRemoved(0);
+            }
             onResume();
         }
         return super.onOptionsItemSelected(item);
@@ -113,9 +122,9 @@ public class CardsFragment extends Fragment {
         private Drawable icon;
         private final Drawable background;
 
-        public SwipeToDeleteSimpleCallback(int dragDirs, int swipeDirs) {
+        SwipeToDeleteSimpleCallback(int dragDirs, int swipeDirs) {
             super(dragDirs, swipeDirs);
-            icon = ContextCompat.getDrawable(getActivity(),
+            icon = ContextCompat.getDrawable(Objects.requireNonNull(getActivity()),
                     R.drawable.ic_delete_sweep_black_24dp);
             background = getActivity().getDrawable(R.drawable.layout_corner_radius_background);
         }
@@ -128,7 +137,7 @@ public class CardsFragment extends Fragment {
             View itemView = viewHolder.itemView;
             CardView cv = itemView.findViewById(R.id.cv_cards);
             int backgroundCornerOffset =
-                    ((ViewGroup.MarginLayoutParams)cv
+                    ((ViewGroup.MarginLayoutParams) cv
                             .getLayoutParams()).rightMargin;
             int cardViewCornerRadius = Math.round(cv.getRadius());
 
@@ -150,7 +159,7 @@ public class CardsFragment extends Fragment {
                 icon.setBounds(iconLeft, iconTop, iconRight, iconBottom);
 
                 int cardViewWidth = itemView.getRight() - 2 * backgroundCornerOffset;
-                if (dX > - cardViewWidth) {
+                if (dX > -cardViewWidth) {
                     background.setBounds(itemView.getRight() + ((int) dX)
                                     - backgroundCornerOffset - 2 * cardViewCornerRadius,
                             itemView.getTop() + backgroundCornerOffset,
@@ -173,7 +182,7 @@ public class CardsFragment extends Fragment {
         }
 
         @Override
-        public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+        public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
             return false;
         }
 
@@ -204,7 +213,10 @@ public class CardsFragment extends Fragment {
         }
 
         @Override
-        public void onMoved(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, int fromPos, RecyclerView.ViewHolder target, int toPos, int x, int y) {
+        public void onMoved(@NonNull RecyclerView recyclerView,
+                            @NonNull RecyclerView.ViewHolder viewHolder,
+                            int fromPos, @NonNull RecyclerView.ViewHolder target,
+                            int toPos, int x, int y) {
             super.onMoved(recyclerView, viewHolder, fromPos, target, toPos, x, y);
         }
     }
@@ -228,11 +240,11 @@ public class CardsFragment extends Fragment {
         }
     }
 
-    private class RVAdapter extends RecyclerView.Adapter<RVAdapter.CardsViewHolder>{
+    private class RVAdapter extends RecyclerView.Adapter<RVAdapter.CardsViewHolder> {
 
         ArrayList<NfcCard> cards;
 
-        RVAdapter(ArrayList<NfcCard> cards){
+        RVAdapter(ArrayList<NfcCard> cards) {
             this.cards = cards;
         }
 
@@ -244,19 +256,22 @@ public class CardsFragment extends Fragment {
         @NonNull
         @Override
         public CardsViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View cardsView = LayoutInflater.from(parent.getContext()).inflate(R.layout.card_view, parent, false);
+            View cardsView = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.card_view, parent, false);
+
             return new CardsViewHolder(cardsView);
         }
 
         @Override
-        public void onBindViewHolder(@NonNull CardsViewHolder holder, int position) {
+        public void onBindViewHolder(@NonNull CardsViewHolder holder, final int position) {
             holder.cardName.setText(cards.get(position).getName());
             holder.cardUID.setText(cards.get(position).getUID());
+
             String path = cards.get(position).getImagePath();
-            if (path != null && ! path.isEmpty())
+            if (path != null && !path.isEmpty())
                 holder.cardPhoto.setImageURI(Uri.fromFile(new File(path)));
             else
-                holder.cardPhoto.setImageDrawable(getActivity().getDrawable(R.drawable.ic_menu_card));
+                holder.cardPhoto.setImageDrawable(Objects.requireNonNull(getActivity()).getDrawable(R.drawable.ic_menu_card));
         }
 
         @Override
@@ -264,7 +279,7 @@ public class CardsFragment extends Fragment {
             return cards.size();
         }
 
-        class CardsViewHolder extends RecyclerView.ViewHolder {
+        class CardsViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
             CardView cv;
             TextView cardName;
             TextView cardUID;
@@ -276,6 +291,28 @@ public class CardsFragment extends Fragment {
                 cardName = itemView.findViewById(R.id.card_name);
                 cardUID = itemView.findViewById(R.id.card_uid);
                 cardPhoto = itemView.findViewById(R.id.card_photo);
+                itemView.setOnClickListener(this);
+            }
+
+            @Override
+            public void onClick(View v) {
+                final int position = getLayoutPosition();
+                Objects.requireNonNull(getActivity()).runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        new AlertDialog.Builder(getActivity(),
+                                R.style.ThemeOverlay_MaterialComponents_NFCopy_FullScreenDialog)
+                                .setTitle(getActivity().getString(R.string.details))
+                                .setMessage(cards.get(position).toString())
+                                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+
+                                    }
+                                })
+                                .show();
+                    }
+                });
             }
         }
 

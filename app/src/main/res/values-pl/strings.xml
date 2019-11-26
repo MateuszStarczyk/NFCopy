@@ -20,4 +20,12 @@
     <string name="action_undo_deleted">Cofnij</string>
     <string name="card_gallery">Galeria</string>
     <string name="card_camera">Aparat</string>
+    <string name="cancel">Anuluj</string>
+    <string name="card_can_be_copied">Karta może zostać skopiowana</string>
+    <string name="card_cannot_be_copied">Karta nie może zostać skopiowana</string>
+    <string name="details">Szczegóły</string>
+    <string name="error">Błąd</string>
+    <string name="read_failed">Błąd odczytu</string>
+    <string name="scanned_card">Zeskanowana karta</string>
+    <string name="accept">Akceptuj</string>
 </resources>
