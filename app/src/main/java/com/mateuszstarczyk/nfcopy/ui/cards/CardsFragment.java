@@ -300,8 +300,8 @@ public class CardsFragment extends Fragment {
                 Objects.requireNonNull(getActivity()).runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        new AlertDialog.Builder(getActivity(),
-                                R.style.ThemeOverlay_MaterialComponents_NFCopy_FullScreenDialog)
+                        new MaterialAlertDialogBuilder(Objects.requireNonNull(getActivity()),
+                            R.style.ThemeOverlay_MaterialComponents_NFCopy_MaterialAlertDialog)
                                 .setTitle(getActivity().getString(R.string.details))
                                 .setMessage(cards.get(position).toString())
                                 .setPositiveButton("OK", new DialogInterface.OnClickListener() {
@@ -310,6 +310,7 @@ public class CardsFragment extends Fragment {
 
                                     }
                                 })
+                                .setCancelable(false)
                                 .show();
                     }
                 });
