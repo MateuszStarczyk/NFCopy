@@ -51,7 +51,6 @@ public class NfcReader {
     public NfcMessage readTag(Tag tag) {
         tag.getId();
         NfcMessage nfcMessage = new NfcMessage();
-        String temp = "";
         boolean isSuccess = true;
         for (String tech: tag.getTechList()) {
             switch (tech) {
@@ -65,15 +64,15 @@ public class NfcReader {
                     NfcA nfcA = NfcA.get(tag);
                     nfcMessage.addMessage(NFCA_NAME)
                             .addMessage("Atqa: ")
-                            .addMessage(convertHexToString(byteToString(nfcA.getAtqa())));
+                            .addMessage(byteToString(nfcA.getAtqa()));
                     break;
                 case NFCB_NAME:
                     NfcB nfcB = NfcB.get(tag);
                     nfcMessage.addMessage(NFCB_NAME)
                             .addMessage("ApplicationData: ")
-                            .addMessage(convertHexToString(byteToString(nfcB.getApplicationData())))
+                            .addMessage(byteToString(nfcB.getApplicationData()))
                             .addMessage("ProtocolInfo: ")
-                            .addMessage(convertHexToString(byteToString(nfcB.getProtocolInfo())));
+                            .addMessage(byteToString(nfcB.getProtocolInfo()));
                     break;
                 case NFCF_NAME:
                     NfcF nfcF = NfcF.get(tag);
@@ -109,9 +108,9 @@ public class NfcReader {
 
                     nfcMessage.addMessage(ISODEP_NAME)
                             .addMessage("HiLayerResponse: ")
-                            .addMessage(convertHexToString(byteToString(isoDep.getHiLayerResponse())))
+                            .addMessage(byteToString(isoDep.getHiLayerResponse()))
                             .addMessage("HistoricalBytes: ")
-                            .addMessage(convertHexToString(byteToString(isoDep.getHistoricalBytes())));
+                            .addMessage(byteToString(isoDep.getHistoricalBytes()));
                     break;
             }
             if (!isSuccess)
